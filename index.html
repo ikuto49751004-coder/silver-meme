@@ -16,7 +16,7 @@
     .btn { background: #fff; border: 2px solid #3b82f6; color: #1d4ed8; font-weight: bold; padding: 12px 4px; border-radius: 8px; font-size: 15px; text-align: center; cursor: pointer; }
     .btn.active { background: #2563eb; color: #fff; border-color: #2563eb; }
     
-    select, input[type="number"], input[type="text"] { width: 100%; padding: 12px; font-size: 15px; border-radius: 8px; border: 1px solid #ced4da; background-color: #e9ecef; box-sizing: border-box; margin-top: 6px; font-weight: bold; }
+    select, input[type="number"], input[type="text"] { width: 100%; padding: 10px 12px; font-size: 15px; border-radius: 8px; border: 1px solid #ced4da; background-color: #f8f9fa; box-sizing: border-box; font-weight: bold; }
     label { font-size: 14px; font-weight: bold; color: #1d4ed8; }
     .field-group { margin-bottom: 12px; }
 
@@ -41,10 +41,19 @@
     th { background: #f1f5f9; padding: 6px 4px; border: 1px solid #e2e8f0; color: #334155; }
     td { padding: 6px 4px; border: 1px solid #e2e8f0; text-align: center; }
     
-    .item-btn-group { display: flex; gap: 8px; margin-top: 6px; }
-    .btn-add-item { background: #e2e8f0; color: #1e293b; border: none; padding: 8px 12px; font-size: 13px; border-radius: 6px; cursor: pointer; font-weight: bold; flex: 1; }
-    .btn-del-item { background: #fee2e2; color: #991b1b; border: none; padding: 8px 12px; font-size: 13px; border-radius: 6px; cursor: pointer; font-weight: bold; flex: 1; }
     .btn-copy { background: #dbeafe; color: #1e40af; border: 1px solid #bfdbfe; padding: 6px 8px; font-size: 12px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+
+    /* 作業項目管理エリア（画像再現用スタイル） */
+    .edit-section-title { font-size: 14px; font-weight: bold; color: #334155; margin: 16px 0 8px 0; display: flex; align-items: center; gap: 4px; }
+    .add-row { display: flex; gap: 8px; margin-bottom: 12px; }
+    .add-row input { flex: 1; background-color: #fff; border: 1px solid #cbd5e1; }
+    .btn-add-action { background: #3b82f6; color: #fff; border: none; padding: 0 16px; font-weight: bold; border-radius: 8px; font-size: 14px; cursor: pointer; white-space: nowrap; }
+
+    .item-manage-list { display: flex; flex-direction: column; gap: 8px; }
+    .item-manage-row { display: flex; gap: 8px; align-items: center; }
+    .item-manage-row input { flex: 1; background-color: #fff; border: 1px solid #cbd5e1; }
+    .btn-item-save { background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1; padding: 10px 12px; font-weight: bold; border-radius: 8px; font-size: 13px; cursor: pointer; }
+    .btn-item-del { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; padding: 10px 12px; font-weight: bold; border-radius: 8px; font-size: 13px; cursor: pointer; }
   </style>
 </head>
 <body>
@@ -99,17 +108,14 @@
     <h3>4. 詳細項目・個数を設定</h3>
     <div class="field-group">
       <label>作業項目 <span style="color:#ef4444;">*</span>:</label>
-      <select id="detail-item">
-        <option value="">-- 先に工程を選択してください --</option>
+      <select id="detail-item" style="margin-top:6px;">
+        <option value="">-- 作業項目を選択 --</option>
       </select>
-      <div class="item-btn-group">
-        <button class="btn-add-item" onclick="addNewItem()">➕ 項目を追加</button>
-        <button class="btn-del-item" onclick="deleteCurrentItem()">🗑 選択中の項目を削除</button>
-      </div>
     </div>
+
     <div class="field-group">
       <label>個数 <span style="color:#ef4444;">*</span>:</label>
-      <select id="item-count" onchange="toggleCustomCount(this)">
+      <select id="item-count" onchange="toggleCustomCount(this)" style="margin-top:6px;">
         <option value="1">1個</option>
         <option value="2">2個</option>
         <option value="3">3個</option>
@@ -122,7 +128,19 @@
         <option value="10">10個</option>
         <option value="custom">直接入力...</option>
       </select>
-      <input type="number" id="custom-count" placeholder="個数を入力" style="display:none;" min="1" value="1">
+      <input type="number" id="custom-count" placeholder="個数を入力" style="display:none; margin-top:6px;" min="1" value="1">
+    </div>
+
+    <!-- ▼ ⚙ 作業項目の追加・編集 エリア -->
+    <div class="edit-section-title">▼ ⚙ 作業項目の追加・編集</div>
+    
+    <div class="add-row">
+      <input type="text" id="new-item-input" placeholder="新しい項目名">
+      <button class="btn-add-action" onclick="addItemInline()">追加</button>
+    </div>
+
+    <div id="item-manage-list" class="item-manage-list">
+      <!-- 選択中工程の項目一覧が動的にここに生成されます -->
     </div>
   </div>
 
@@ -186,7 +204,7 @@
     const defaultDetailOptions = {
       '冷凍機': ['配管取り付け', '気密試験', '真空引き', '冷媒充填'],
       '加工': ['穴あけ', 'タップ立て', '曲げ加工', 'バリ取り'],
-      '組み立て': ['本体組付け', 'パーツ固定', '配線処理'],
+      '組み立て': ['パネル取付', 'パーツ固定', 'ネジ締め'],
       '検査': ['外観検査', '動作確認', '絶縁抵抗試験'],
       '整備': ['清掃・拭き上げ', '梱包', '出荷準備']
     };
@@ -228,17 +246,30 @@
     function selectProcess(element, processName) {
       selectBtn('process-group', element);
       currentProcess = processName;
+      renderDetailSection();
+    }
+
+    function renderDetailSection() {
       updateDetailDropdown();
+      renderManageList();
     }
 
     function updateDetailDropdown() {
       const detailSelect = document.getElementById('detail-item');
       detailSelect.innerHTML = '';
+      
+      if (!currentProcess) {
+        detailSelect.innerHTML = '<option value="">-- 先に工程を選択してください --</option>';
+        return;
+      }
+
       const items = detailOptions[currentProcess] || [];
       if (items.length === 0) {
         detailSelect.innerHTML = '<option value="">-- 作業項目がありません --</option>';
         return;
       }
+
+      detailSelect.innerHTML = '<option value="">-- 作業項目を選択 --</option>';
       items.forEach(item => {
         const opt = document.createElement('option');
         opt.value = item;
@@ -247,32 +278,66 @@
       });
     }
 
-    function addNewItem() {
+    function renderManageList() {
+      const container = document.getElementById('item-manage-list');
+      container.innerHTML = '';
+
+      if (!currentProcess) return;
+
+      const items = detailOptions[currentProcess] || [];
+      items.forEach((item, index) => {
+        const row = document.createElement('div');
+        row.className = 'item-manage-row';
+        row.innerHTML = `
+          <input type="text" id="edit-item-${index}" value="${item}">
+          <button class="btn-item-save" onclick="saveItemInline(${index})">保存</button>
+          <button class="btn-item-del" onclick="deleteItemInline(${index})">削除</button>
+        `;
+        container.appendChild(row);
+      });
+    }
+
+    function addItemInline() {
       if (!currentProcess) {
         alert('先に工程を選択してください！');
         return;
       }
-      const newItem = prompt('新しい作業項目名を入力してください:');
-      if (newItem && newItem.trim() !== '') {
-        if (!detailOptions[currentProcess]) detailOptions[currentProcess] = [];
-        detailOptions[currentProcess].push(newItem.trim());
-        saveDetailOptions();
-        updateDetailDropdown();
-        document.getElementById('detail-item').value = newItem.trim();
-      }
-    }
-
-    function deleteCurrentItem() {
-      const detailSelect = document.getElementById('detail-item');
-      const selectedVal = detailSelect.value;
-      if (!selectedVal) {
-        alert('削除する項目が選択されていません。');
+      const input = document.getElementById('new-item-input');
+      const val = input.value.trim();
+      if (!val) {
+        alert('新しい項目名を入力してください。');
         return;
       }
-      if (confirm(`「${selectedVal}」を削除してもよろしいですか？`)) {
-        detailOptions[currentProcess] = detailOptions[currentProcess].filter(item => item !== selectedVal);
+
+      if (!detailOptions[currentProcess]) detailOptions[currentProcess] = [];
+      detailOptions[currentProcess].push(val);
+      saveDetailOptions();
+      
+      input.value = '';
+      renderDetailSection();
+      document.getElementById('detail-item').value = val;
+    }
+
+    function saveItemInline(index) {
+      const input = document.getElementById(`edit-item-${index}`);
+      const newVal = input.value.trim();
+      if (!newVal) {
+        alert('項目名を入力してください。');
+        return;
+      }
+
+      detailOptions[currentProcess][index] = newVal;
+      saveDetailOptions();
+      renderDetailSection();
+      alert('変更を保存しました！');
+    }
+
+    function deleteItemInline(index) {
+      const targetName = detailOptions[currentProcess][index];
+      if (confirm(`「${targetName}」を削除してもよろしいですか？`)) {
+        detailOptions[currentProcess].splice(index, 1);
         saveDetailOptions();
-        updateDetailDropdown();
+        renderDetailSection();
       }
     }
 
@@ -476,7 +541,7 @@
     }
 
     function resetAllData() {
-      if (confirm('保存されている計測データと履歴をすべて消去しますか？')) {
+      if (confirm('保存されている計測データと履歴をすべて消去しますか？（追加・編集した作業項目は残ります）')) {
         stopTimer();
         seconds = 0;
         historyData = [];
