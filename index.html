@@ -37,13 +37,14 @@
     .summary-title { font-size: 12px; color: #0369a1; font-weight: bold; }
     .summary-time { font-size: 14px; color: #0c4a6e; font-weight: bold; font-family: monospace; margin-top: 4px; }
 
-    table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 8px; }
-    th { background: #f1f5f9; padding: 8px; border: 1px solid #e2e8f0; color: #334155; }
-    td { padding: 8px; border: 1px solid #e2e8f0; text-align: center; }
+    table { width: 100%; border-collapse: collapse; font-size: 11px; margin-top: 8px; }
+    th { background: #f1f5f9; padding: 6px 4px; border: 1px solid #e2e8f0; color: #334155; }
+    td { padding: 6px 4px; border: 1px solid #e2e8f0; text-align: center; }
     
     .item-btn-group { display: flex; gap: 8px; margin-top: 6px; }
     .btn-add-item { background: #e2e8f0; color: #1e293b; border: none; padding: 8px 12px; font-size: 13px; border-radius: 6px; cursor: pointer; font-weight: bold; flex: 1; }
     .btn-del-item { background: #fee2e2; color: #991b1b; border: none; padding: 8px 12px; font-size: 13px; border-radius: 6px; cursor: pointer; font-weight: bold; flex: 1; }
+    .btn-copy { background: #dbeafe; color: #1e40af; border: 1px solid #bfdbfe; padding: 6px 8px; font-size: 12px; border-radius: 4px; cursor: pointer; font-weight: bold; }
   </style>
 </head>
 <body>
@@ -157,15 +158,15 @@
       </div>
     </div>
 
-    <h3>📊 計測結果履歴</h3>
+    <h3>📊 計測結果履歴（保存済みデータ）</h3>
     <table>
       <thead>
         <tr>
-          <th>機種</th>
-          <th>区分</th>
-          <th>工程</th>
+          <th>仕事番号</th>
+          <th>機種/区分/工程</th>
           <th>作業項目</th>
           <th>時間</th>
+          <th>操作</th>
         </tr>
       </thead>
       <tbody id="history-list">
@@ -180,14 +181,44 @@
     let scheduleData = [];
     let historyData = [];
     let currentProcess = '';
+    let currentJobNo = '';
 
-    const detailOptions = {
+    const defaultDetailOptions = {
       '冷凍機': ['配管取り付け', '気密試験', '真空引き', '冷媒充填'],
       '加工': ['穴あけ', 'タップ立て', '曲げ加工', 'バリ取り'],
       '組み立て': ['本体組付け', 'パーツ固定', '配線処理'],
       '検査': ['外観検査', '動作確認', '絶縁抵抗試験'],
       '整備': ['清掃・拭き上げ', '梱包', '出荷準備']
     };
+
+    let detailOptions = JSON.parse(localStorage.getItem('kousu_detailOptions')) || defaultDetailOptions;
+
+    window.onload = function() {
+      const savedHistory = localStorage.getItem('kousu_historyData');
+      if (savedHistory) {
+        historyData = JSON.parse(savedHistory);
+        updateHistoryTable();
+        updateSummary();
+      }
+      
+      const savedSchedule = localStorage.getItem('kousu_scheduleData');
+      if (savedSchedule) {
+        scheduleData = JSON.parse(savedSchedule);
+        renderJobSelect();
+      }
+    };
+
+    function saveDetailOptions() {
+      localStorage.setItem('kousu_detailOptions', JSON.stringify(detailOptions));
+    }
+
+    function saveHistoryData() {
+      localStorage.setItem('kousu_historyData', JSON.stringify(historyData));
+    }
+
+    function saveScheduleData() {
+      localStorage.setItem('kousu_scheduleData', JSON.stringify(scheduleData));
+    }
 
     function selectBtn(groupId, element) {
       document.querySelectorAll(`#${groupId} .btn`).forEach(btn => btn.classList.remove('active'));
@@ -225,6 +256,7 @@
       if (newItem && newItem.trim() !== '') {
         if (!detailOptions[currentProcess]) detailOptions[currentProcess] = [];
         detailOptions[currentProcess].push(newItem.trim());
+        saveDetailOptions();
         updateDetailDropdown();
         document.getElementById('detail-item').value = newItem.trim();
       }
@@ -239,6 +271,7 @@
       }
       if (confirm(`「${selectedVal}」を削除してもよろしいですか？`)) {
         detailOptions[currentProcess] = detailOptions[currentProcess].filter(item => item !== selectedVal);
+        saveDetailOptions();
         updateDetailDropdown();
       }
     }
@@ -278,28 +311,39 @@
       reader.onload = function(e) {
         const lines = e.target.result.trim().split('\n');
         scheduleData = [];
-        const select = document.getElementById('job-select');
-        select.innerHTML = '<option value="">-- 仕事番号を選択してください --</option>';
 
         for (let i = 1; i < lines.length; i++) {
           const [jobNo, model, spec, process] = lines[i].split(',').map(s => s.trim());
           if (jobNo) {
             scheduleData.push({ jobNo, model, spec, process });
-            const opt = document.createElement('option');
-            opt.value = i - 1;
-            opt.textContent = `${jobNo} (${model})`;
-            select.appendChild(opt);
           }
         }
-        alert('工程表を読み込みました！');
+        saveScheduleData();
+        renderJobSelect();
+        alert('工程表を読み込み保存しました！');
       };
       reader.readAsText(file);
     }
 
+    function renderJobSelect() {
+      const select = document.getElementById('job-select');
+      select.innerHTML = '<option value="">-- 仕事番号を選択してください --</option>';
+      scheduleData.forEach((data, index) => {
+        const opt = document.createElement('option');
+        opt.value = index;
+        opt.textContent = `${data.jobNo} (${data.model})`;
+        select.appendChild(opt);
+      });
+    }
+
     function autoSelectJob() {
       const index = document.getElementById('job-select').value;
-      if (index === '') return;
+      if (index === '') {
+        currentJobNo = '';
+        return;
+      }
       const data = scheduleData[index];
+      currentJobNo = data.jobNo;
       autoClick('model-group', data.model);
       autoClick('spec-group', data.spec);
       document.querySelectorAll('#process-group .btn').forEach(btn => {
@@ -322,8 +366,8 @@
 
     function startTimer() {
       if (!validateInputs()) return;
-      
       if (timerInterval) return;
+
       document.getElementById('start-btn').style.background = '#10b981';
       document.getElementById('stop-btn').style.background = '#ef4444';
       document.getElementById('stop-btn').style.color = '#fff';
@@ -354,13 +398,33 @@
       let countSelect = document.getElementById('item-count').value;
       let count = countSelect === 'custom' ? document.getElementById('custom-count').value : countSelect;
 
-      historyData.push({ model, spec, process, item, count, timeSec: seconds, timeStr: formatTime(seconds) });
+      historyData.push({ 
+        jobNo: currentJobNo || '未設定', 
+        model, 
+        spec, 
+        process, 
+        item, 
+        count, 
+        timeSec: seconds, 
+        timeStr: formatTime(seconds) 
+      });
       
+      saveHistoryData();
       updateHistoryTable();
       updateSummary();
 
       seconds = 0;
       document.getElementById('timer').textContent = '00:00:00';
+    }
+
+    function copyToClipboard(text) {
+      if (text === '未設定' || !text) {
+        alert('仕事番号が設定されていません。');
+        return;
+      }
+      navigator.clipboard.writeText(text).then(() => {
+        alert(`仕事番号 「${text}」 をコピーしました！\nManageクラウド画面で Ctrl+V で貼り付けできます。`);
+      });
     }
 
     function updateHistoryTable() {
@@ -372,7 +436,13 @@
       }
       historyData.forEach(row => {
         const tr = document.createElement('tr');
-        tr.innerHTML = `<td>${row.model}</td><td>${row.spec}</td><td>${row.process}</td><td>${row.item} (${row.count}個)</td><td>${row.timeStr}</td>`;
+        tr.innerHTML = `
+          <td style="font-weight:bold;">${row.jobNo}</td>
+          <td>${row.model} / ${row.spec} / ${row.process}</td>
+          <td>${row.item} (${row.count}個)</td>
+          <td>${row.timeStr}</td>
+          <td><button class="btn-copy" onclick="copyToClipboard('${row.jobNo}')">📋 番号コピー</button></td>
+        `;
         tbody.appendChild(tr);
       });
     }
@@ -394,9 +464,9 @@
         alert('保存するデータがありません。');
         return;
       }
-      let csv = '機種,区分,工程,作業項目,個数,時間\n';
+      let csv = '仕事番号,機種,区分,工程,作業項目,個数,時間\n';
       historyData.forEach(r => {
-        csv += `${r.model},${r.spec},${r.process},${r.item},${r.count},${r.timeStr}\n`;
+        csv += `${r.jobNo},${r.model},${r.spec},${r.process},${r.item},${r.count},${r.timeStr}\n`;
       });
       const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
       const link = document.createElement('a');
@@ -406,10 +476,11 @@
     }
 
     function resetAllData() {
-      if (confirm('計測データと履歴をすべてリセットしますか？')) {
+      if (confirm('保存されている計測データと履歴をすべて消去しますか？')) {
         stopTimer();
         seconds = 0;
         historyData = [];
+        localStorage.removeItem('kousu_historyData');
         document.getElementById('timer').textContent = '00:00:00';
         updateHistoryTable();
         updateSummary();
