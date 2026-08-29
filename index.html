@@ -224,16 +224,84 @@
     let currentProcess = '';
     let currentJobNo = '';
 
-    // --- 音声読み上げ機能（Web Speech API） ---
+    // --- 効果音再生 (Web Audio API) ---
+    let audioCtx = null;
+    function playChime() {
+      try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        
+        const osc1 = audioCtx.createOscillator();
+        const osc2 = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+
+        osc1.type = 'triangle';
+        osc2.type = 'triangle';
+        osc1.frequency.setValueAtTime(523.25, audioCtx.currentTime); // ド
+        osc2.frequency.setValueAtTime(659.25, audioCtx.currentTime + 0.1); // ミ
+
+        gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.4);
+
+        osc1.connect(gain);
+        osc2.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        osc1.start();
+        osc1.stop(audioCtx.currentTime + 0.1);
+        osc2.start(audioCtx.currentTime + 0.1);
+        osc2.stop(audioCtx.currentTime + 0.4);
+      } catch (e) {
+        console.log("Audio error:", e);
+      }
+    }
+
+    // --- 可愛い音声読み上げ機能（Web Speech API） ---
+    let availableVoices = [];
+
+    // 利用可能な声のリストを取得
+    function loadVoices() {
+      if ('speechSynthesis' in window) {
+        availableVoices = window.speechSynthesis.getVoices();
+      }
+    }
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.onvoiceschanged = loadVoices;
+      loadVoices();
+    }
+
     function speakText(text) {
       if ('speechSynthesis' in window) {
-        window.speechSynthesis.cancel(); // 前の音声があれば停止
+        window.speechSynthesis.cancel(); // 前の音声をクリア
+
         const uttr = new SpeechSynthesisUtterance(text);
         uttr.lang = 'ja-JP';
-        uttr.rate = 1.0; // 読み上げ速度
-        uttr.pitch = 1.2; // 少し高めの可愛い声
+
+        // 女性らしい声を優先選択（Kyoko, Haruka, Sayaka等）
+        const femaleVoice = availableVoices.find(v => 
+          v.lang.includes('ja') && (
+            v.name.includes('Kyoko') || 
+            v.name.includes('Haruka') || 
+            v.name.includes('Sayaka') || 
+            v.name.includes('Otoya') === false
+          )
+        );
+        if (femaleVoice) uttr.voice = femaleVoice;
+
+        // ★ 声質のパラメータ調整（可愛い声の設定）
+        uttr.pitch = 1.5;  // 高めのピッチ（1.0〜2.0）
+        uttr.rate = 1.15;  // やや早めのテンポ（明るく聞こえる）
+
         window.speechSynthesis.speak(uttr);
       }
+    }
+
+    // 5分応援（効果音ピロン♪ → 声で応援）
+    function cheer5Min(text) {
+      playChime();
+      setTimeout(() => {
+        speakText(text);
+      }, 350);
     }
 
     const mascotConfig = {
@@ -552,7 +620,7 @@
       if (timerInterval) return;
 
       const startMsg = (mascotConfig[currentProcess] || mascotConfig['default']).text;
-      speakText(startMsg); // ★ スタート時の声を再生
+      cheer5Min(startMsg); // チャイム音＋可愛い声
 
       document.getElementById('start-btn').style.background = '#10b981';
       document.getElementById('stop-btn').style.background = '#ef4444';
@@ -566,11 +634,11 @@
         seconds++;
         document.getElementById('timer').textContent = formatTime(seconds);
 
-        // 5分（300秒）ごとに応援セリフ更新＆音声読み上げ！
+        // 5分（300秒）ごとに効果音＋可愛い声で応援！
         if (seconds > 0 && seconds % 300 === 0) {
           const newMsg = get5MinMessage(seconds);
           updateMascot('running', newMsg);
-          speakText(newMsg); // ★ 5分ごとの応援を音声再生
+          cheer5Min(newMsg);
         }
       }, 1000);
     }
@@ -579,7 +647,7 @@
       if (!timerInterval) return;
       clearInterval(timerInterval);
       timerInterval = null;
-      speakText('一時停止しました'); // ★ 一時停止時の声
+      speakText('一時停止しました');
       updateMascot('stopped');
     }
 
@@ -590,7 +658,7 @@
       clearInterval(timerInterval);
       timerInterval = null;
 
-      speakText('お疲れ様でした！作業完了です！'); // ★ 終了時の声
+      cheer5Min('お疲れ様でした！作業完了です！');
 
       const model = document.querySelector('#model-group .btn.active').textContent;
       const spec = document.querySelector('#spec-group .btn.active').textContent;
