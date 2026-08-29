@@ -22,12 +22,10 @@
 
     .btn-file { background: #3b82f6; color: #fff; border: none; padding: 12px; font-weight: bold; border-radius: 8px; width: 100%; font-size: 15px; margin-bottom: 12px; cursor: pointer; }
     
-    /* 応援キャラクターエリアのスタイル */
     .mascot-box { text-align: center; padding: 10px 0 5px 0; background: #e0f2fe; border-radius: 10px; margin-bottom: 10px; min-height: 50px; border: 1px solid #bae6fd; }
     .mascot-icon { font-size: 32px; display: inline-block; }
     .mascot-text { font-size: 14px; font-weight: bold; color: #0369a1; margin-left: 6px; }
 
-    /* キャラクターのぽよぽよアニメーション */
     @keyframes bounce {
       0%, 100% { transform: translateY(0); }
       50% { transform: translateY(-8px); }
@@ -166,7 +164,6 @@
 
   <!-- タイマーカード -->
   <div class="card">
-    <!-- 応援キャラクター表示欄 -->
     <div class="mascot-box">
       <span class="mascot-icon" id="mascot-icon">🐟</span>
       <span class="mascot-text" id="mascot-text">準備OK！スタートを押してね！</span>
@@ -227,7 +224,18 @@
     let currentProcess = '';
     let currentJobNo = '';
 
-    // 魚たちの初期メッセージ設定
+    // --- 音声読み上げ機能（Web Speech API） ---
+    function speakText(text) {
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel(); // 前の音声があれば停止
+        const uttr = new SpeechSynthesisUtterance(text);
+        uttr.lang = 'ja-JP';
+        uttr.rate = 1.0; // 読み上げ速度
+        uttr.pitch = 1.2; // 少し高めの可愛い声
+        window.speechSynthesis.speak(uttr);
+      }
+    }
+
     const mascotConfig = {
       '冷凍機': { icon: '🐟', text: '作業スタート！スイスイ進めていこう！' },
       '加工': { icon: '🐠', text: '作業スタート！集中していこう！' },
@@ -237,7 +245,6 @@
       'default': { icon: '🐟', text: '作業スタート！がんばって！' }
     };
 
-    // 5分（300秒）ごとの可愛い魚たちの応援メッセージ
     const intervalMessages = {
       '冷凍機': [
         '5分経過！スイスイ順調だよ！',
@@ -544,6 +551,9 @@
       if (!validateInputs()) return;
       if (timerInterval) return;
 
+      const startMsg = (mascotConfig[currentProcess] || mascotConfig['default']).text;
+      speakText(startMsg); // ★ スタート時の声を再生
+
       document.getElementById('start-btn').style.background = '#10b981';
       document.getElementById('stop-btn').style.background = '#ef4444';
       document.getElementById('stop-btn').style.color = '#fff';
@@ -556,10 +566,11 @@
         seconds++;
         document.getElementById('timer').textContent = formatTime(seconds);
 
-        // 5分（300秒）ごとに応援セリフを更新！
+        // 5分（300秒）ごとに応援セリフ更新＆音声読み上げ！
         if (seconds > 0 && seconds % 300 === 0) {
           const newMsg = get5MinMessage(seconds);
           updateMascot('running', newMsg);
+          speakText(newMsg); // ★ 5分ごとの応援を音声再生
         }
       }, 1000);
     }
@@ -568,6 +579,7 @@
       if (!timerInterval) return;
       clearInterval(timerInterval);
       timerInterval = null;
+      speakText('一時停止しました'); // ★ 一時停止時の声
       updateMascot('stopped');
     }
 
@@ -577,6 +589,8 @@
       
       clearInterval(timerInterval);
       timerInterval = null;
+
+      speakText('お疲れ様でした！作業完了です！'); // ★ 終了時の声
 
       const model = document.querySelector('#model-group .btn.active').textContent;
       const spec = document.querySelector('#spec-group .btn.active').textContent;
