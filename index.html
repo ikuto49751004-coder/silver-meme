@@ -43,8 +43,14 @@
     
     .btn-copy { background: #dbeafe; color: #1e40af; border: 1px solid #bfdbfe; padding: 6px 8px; font-size: 12px; border-radius: 4px; cursor: pointer; font-weight: bold; }
 
-    /* 作業項目管理エリア（画像再現用スタイル） */
-    .edit-section-title { font-size: 14px; font-weight: bold; color: #334155; margin: 16px 0 8px 0; display: flex; align-items: center; gap: 4px; }
+    /* 開閉（アコーディオン）用スタイル */
+    details.edit-section { margin-top: 16px; border: 1px solid #e2e8f0; border-radius: 8px; background-color: #fafafa; overflow: hidden; }
+    details.edit-section summary { font-size: 14px; font-weight: bold; color: #334155; padding: 12px; cursor: pointer; user-select: none; list-style: none; display: flex; align-items: center; justify-content: space-between; }
+    details.edit-section summary::-webkit-details-marker { display: none; }
+    details.edit-section summary::after { content: "▶"; font-size: 12px; color: #64748b; transition: transform 0.2s; }
+    details.edit-section[open] summary::after { transform: rotate(90deg); }
+    
+    .edit-content { padding: 0 12px 12px 12px; }
     .add-row { display: flex; gap: 8px; margin-bottom: 12px; }
     .add-row input { flex: 1; background-color: #fff; border: 1px solid #cbd5e1; }
     .btn-add-action { background: #3b82f6; color: #fff; border: none; padding: 0 16px; font-weight: bold; border-radius: 8px; font-size: 14px; cursor: pointer; white-space: nowrap; }
@@ -131,17 +137,20 @@
       <input type="number" id="custom-count" placeholder="個数を入力" style="display:none; margin-top:6px;" min="1" value="1">
     </div>
 
-    <!-- ▼ ⚙ 作業項目の追加・編集 エリア -->
-    <div class="edit-section-title">▼ ⚙ 作業項目の追加・編集</div>
-    
-    <div class="add-row">
-      <input type="text" id="new-item-input" placeholder="新しい項目名">
-      <button class="btn-add-action" onclick="addItemInline()">追加</button>
-    </div>
+    <!-- 折りたたみ式（details/summary）の作業項目管理エリア -->
+    <details class="edit-section">
+      <summary>⚙ 作業項目の追加・編集</summary>
+      <div class="edit-content">
+        <div class="add-row">
+          <input type="text" id="new-item-input" placeholder="新しい項目名">
+          <button class="btn-add-action" onclick="addItemInline()">追加</button>
+        </div>
 
-    <div id="item-manage-list" class="item-manage-list">
-      <!-- 選択中工程の項目一覧が動的にここに生成されます -->
-    </div>
+        <div id="item-manage-list" class="item-manage-list">
+          <!-- 選択中工程の項目一覧が動的にここに生成されます -->
+        </div>
+      </div>
+    </details>
   </div>
 
   <!-- タイマーカード -->
