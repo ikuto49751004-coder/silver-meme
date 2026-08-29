@@ -32,17 +32,18 @@
     .btn-save { background: #3b82f6; color: #fff; border: none; padding: 12px; font-weight: bold; border-radius: 8px; font-size: 15px; cursor: pointer; }
     .btn-reset-all { background: #64748b; color: #fff; border: none; padding: 12px; font-weight: bold; border-radius: 8px; font-size: 15px; cursor: pointer; }
 
-    /* 合計時間カード */
     .summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; text-align: center; margin-bottom: 15px; }
     .summary-box { background: #e0f2fe; border-radius: 8px; padding: 10px 4px; border: 1px solid #bae6fd; }
     .summary-title { font-size: 12px; color: #0369a1; font-weight: bold; }
     .summary-time { font-size: 14px; color: #0c4a6e; font-weight: bold; font-family: monospace; margin-top: 4px; }
 
-    /* 履歴テーブル */
     table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 8px; }
     th { background: #f1f5f9; padding: 8px; border: 1px solid #e2e8f0; color: #334155; }
     td { padding: 8px; border: 1px solid #e2e8f0; text-align: center; }
-    .btn-add-item { background: #e2e8f0; color: #1e293b; border: none; padding: 6px 10px; font-size: 12px; border-radius: 6px; cursor: pointer; margin-top: 4px; font-weight: bold; }
+    
+    .item-btn-group { display: flex; gap: 8px; margin-top: 6px; }
+    .btn-add-item { background: #e2e8f0; color: #1e293b; border: none; padding: 8px 12px; font-size: 13px; border-radius: 6px; cursor: pointer; font-weight: bold; flex: 1; }
+    .btn-del-item { background: #fee2e2; color: #991b1b; border: none; padding: 8px 12px; font-size: 13px; border-radius: 6px; cursor: pointer; font-weight: bold; flex: 1; }
   </style>
 </head>
 <body>
@@ -59,7 +60,7 @@
 
   <!-- 1. 機種を選択 -->
   <div class="card">
-    <h3>1. 機種を選択</h3>
+    <h3>1. 機種を選択 <span style="color:#ef4444;">*</span></h3>
     <div class="grid-3" id="model-group">
       <button class="btn" onclick="selectBtn('model-group', this)">LU-114</button>
       <button class="btn" onclick="selectBtn('model-group', this)">LHU-114</button>
@@ -72,7 +73,7 @@
 
   <!-- 2. 仕様区分を選択 -->
   <div class="card">
-    <h3>2. 仕様区分を選択</h3>
+    <h3>2. 仕様区分を選択 <span style="color:#ef4444;">*</span></h3>
     <div class="grid-3" id="spec-group">
       <button class="btn" onclick="selectBtn('spec-group', this)">標準</button>
       <button class="btn" onclick="selectBtn('spec-group', this)">オプション</button>
@@ -82,7 +83,7 @@
 
   <!-- 3. 工程を選択 -->
   <div class="card">
-    <h3>3. 工程を選択</h3>
+    <h3>3. 工程を選択 <span style="color:#ef4444;">*</span></h3>
     <div class="grid-process" id="process-group">
       <button class="btn" onclick="selectProcess(this, '冷凍機')">冷凍機</button>
       <button class="btn" onclick="selectProcess(this, '加工')">加工</button>
@@ -96,12 +97,17 @@
   <div class="card">
     <h3>4. 詳細項目・個数を設定</h3>
     <div class="field-group">
-      <label>作業項目:</label>
-      <select id="detail-item"></select>
-      <button class="btn-add-item" onclick="addNewItem()">➕ 作業項目を追加</button>
+      <label>作業項目 <span style="color:#ef4444;">*</span>:</label>
+      <select id="detail-item">
+        <option value="">-- 先に工程を選択してください --</option>
+      </select>
+      <div class="item-btn-group">
+        <button class="btn-add-item" onclick="addNewItem()">➕ 項目を追加</button>
+        <button class="btn-del-item" onclick="deleteCurrentItem()">🗑 選択中の項目を削除</button>
+      </div>
     </div>
     <div class="field-group">
-      <label>個数:</label>
+      <label>個数 <span style="color:#ef4444;">*</span>:</label>
       <select id="item-count" onchange="toggleCustomCount(this)">
         <option value="1">1個</option>
         <option value="2">2個</option>
@@ -197,7 +203,11 @@
     function updateDetailDropdown() {
       const detailSelect = document.getElementById('detail-item');
       detailSelect.innerHTML = '';
-      const items = detailOptions[currentProcess] || ['標準作業'];
+      const items = detailOptions[currentProcess] || [];
+      if (items.length === 0) {
+        detailSelect.innerHTML = '<option value="">-- 作業項目がありません --</option>';
+        return;
+      }
       items.forEach(item => {
         const opt = document.createElement('option');
         opt.value = item;
@@ -220,6 +230,19 @@
       }
     }
 
+    function deleteCurrentItem() {
+      const detailSelect = document.getElementById('detail-item');
+      const selectedVal = detailSelect.value;
+      if (!selectedVal) {
+        alert('削除する項目が選択されていません。');
+        return;
+      }
+      if (confirm(`「${selectedVal}」を削除してもよろしいですか？`)) {
+        detailOptions[currentProcess] = detailOptions[currentProcess].filter(item => item !== selectedVal);
+        updateDetailDropdown();
+      }
+    }
+
     function toggleCustomCount(select) {
       const customInput = document.getElementById('custom-count');
       if (select.value === 'custom') {
@@ -227,6 +250,25 @@
       } else {
         customInput.style.display = 'none';
       }
+    }
+
+    function validateInputs() {
+      const model = document.querySelector('#model-group .btn.active');
+      const spec = document.querySelector('#spec-group .btn.active');
+      const process = document.querySelector('#process-group .btn.active');
+      const item = document.getElementById('detail-item').value;
+      
+      let countSelect = document.getElementById('item-count').value;
+      let customCount = document.getElementById('custom-count').value;
+      let countValid = countSelect === 'custom' ? (customCount && customCount > 0) : !!countSelect;
+
+      if (!model) { alert('【必須】機種を選択してください。'); return false; }
+      if (!spec) { alert('【必須】仕様区分を選択してください。'); return false; }
+      if (!process) { alert('【必須】工程を選択してください。'); return false; }
+      if (!item) { alert('【必須】作業項目を選択してください。'); return false; }
+      if (!countValid) { alert('【必須】個数を正しく入力してください。'); return false; }
+
+      return true;
     }
 
     function importCSV(input) {
@@ -279,6 +321,8 @@
     }
 
     function startTimer() {
+      if (!validateInputs()) return;
+      
       if (timerInterval) return;
       document.getElementById('start-btn').style.background = '#10b981';
       document.getElementById('stop-btn').style.background = '#ef4444';
@@ -299,12 +343,13 @@
 
     function finishTimer() {
       if (seconds === 0) return;
+      if (!validateInputs()) return;
       stopTimer();
 
-      const model = document.querySelector('#model-group .btn.active')?.textContent || '未選択';
-      const spec = document.querySelector('#spec-group .btn.active')?.textContent || '未選択';
-      const process = document.querySelector('#process-group .btn.active')?.textContent || '未選択';
-      const item = document.getElementById('detail-item').value || '未選択';
+      const model = document.querySelector('#model-group .btn.active').textContent;
+      const spec = document.querySelector('#spec-group .btn.active').textContent;
+      const process = document.querySelector('#process-group .btn.active').textContent;
+      const item = document.getElementById('detail-item').value;
       
       let countSelect = document.getElementById('item-count').value;
       let count = countSelect === 'custom' ? document.getElementById('custom-count').value : countSelect;
