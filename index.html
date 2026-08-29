@@ -72,6 +72,12 @@
     .item-manage-row input { flex: 1; background-color: #fff; border: 1px solid #cbd5e1; }
     .btn-item-save { background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1; padding: 10px 12px; font-weight: bold; border-radius: 8px; font-size: 13px; cursor: pointer; }
     .btn-item-del { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; padding: 10px 12px; font-weight: bold; border-radius: 8px; font-size: 13px; cursor: pointer; }
+
+    /* 音声設定用スタイル */
+    .voice-control-group { display: flex; flex-direction: column; gap: 10px; margin-top: 8px; }
+    .slider-row { display: flex; align-items: center; justify-content: space-between; font-size: 13px; font-weight: bold; color: #475569; }
+    .slider-row input[type="range"] { width: 60%; }
+    .btn-test-voice { background: #e0e7ff; color: #3730a3; border: 1px solid #c7d2fe; padding: 8px; border-radius: 6px; font-size: 13px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 5px; }
   </style>
 </head>
 <body>
@@ -158,6 +164,23 @@
         </div>
 
         <div id="item-manage-list" class="item-manage-list"></div>
+      </div>
+    </details>
+
+    <details class="edit-section">
+      <summary>🔊 応援音声の調整 (速さ・高さ)</summary>
+      <div class="edit-content">
+        <div class="voice-control-group">
+          <div class="slider-row">
+            <span>話す速さ: <span id="rate-val">0.85</span></span>
+            <input type="range" id="voice-rate" min="0.5" max="1.5" step="0.05" value="0.85" oninput="updateVoiceSettings()">
+          </div>
+          <div class="slider-row">
+            <span>声の高さ: <span id="pitch-val">1.4</span></span>
+            <input type="range" id="voice-pitch" min="0.8" max="2.0" step="0.1" value="1.4" oninput="updateVoiceSettings()">
+          </div>
+          <button class="btn-test-voice" onclick="speakText('5分経過！その調子で頑張ろう！')">🔊 声をテスト再生する</button>
+        </div>
       </div>
     </details>
   </div>
@@ -256,10 +279,9 @@
       }
     }
 
-    // --- 可愛い音声読み上げ機能（Web Speech API） ---
+    // --- 音声合成機能 ---
     let availableVoices = [];
 
-    // 利用可能な声のリストを取得
     function loadVoices() {
       if ('speechSynthesis' in window) {
         availableVoices = window.speechSynthesis.getVoices();
@@ -270,14 +292,20 @@
       loadVoices();
     }
 
+    function updateVoiceSettings() {
+      const rate = document.getElementById('voice-rate').value;
+      const pitch = document.getElementById('voice-pitch').value;
+      document.getElementById('rate-val').textContent = rate;
+      document.getElementById('pitch-val').textContent = pitch;
+    }
+
     function speakText(text) {
       if ('speechSynthesis' in window) {
-        window.speechSynthesis.cancel(); // 前の音声をクリア
+        window.speechSynthesis.cancel();
 
         const uttr = new SpeechSynthesisUtterance(text);
         uttr.lang = 'ja-JP';
 
-        // 女性らしい声を優先選択（Kyoko, Haruka, Sayaka等）
         const femaleVoice = availableVoices.find(v => 
           v.lang.includes('ja') && (
             v.name.includes('Kyoko') || 
@@ -288,20 +316,22 @@
         );
         if (femaleVoice) uttr.voice = femaleVoice;
 
-        // ★ 声質のパラメータ調整（可愛い声の設定）
-        uttr.pitch = 1.5;  // 高めのピッチ（1.0〜2.0）
-        uttr.rate = 1.15;  // やや早めのテンポ（明るく聞こえる）
+        // 設定スライダーの値を取り出して適用（デフォルトは ゆっくり:0.85, 可愛い高さ:1.4）
+        const currentRate = parseFloat(document.getElementById('voice-rate').value) || 0.85;
+        const currentPitch = parseFloat(document.getElementById('voice-pitch').value) || 1.4;
+
+        uttr.rate = currentRate;   // ★ ゆっくり聞き取りやすい速度
+        uttr.pitch = currentPitch; // ★ 可愛く聞き取りやすい高さ
 
         window.speechSynthesis.speak(uttr);
       }
     }
 
-    // 5分応援（効果音ピロン♪ → 声で応援）
     function cheer5Min(text) {
       playChime();
       setTimeout(() => {
         speakText(text);
-      }, 350);
+      }, 400);
     }
 
     const mascotConfig = {
@@ -620,7 +650,7 @@
       if (timerInterval) return;
 
       const startMsg = (mascotConfig[currentProcess] || mascotConfig['default']).text;
-      cheer5Min(startMsg); // チャイム音＋可愛い声
+      cheer5Min(startMsg);
 
       document.getElementById('start-btn').style.background = '#10b981';
       document.getElementById('stop-btn').style.background = '#ef4444';
@@ -634,7 +664,6 @@
         seconds++;
         document.getElementById('timer').textContent = formatTime(seconds);
 
-        // 5分（300秒）ごとに効果音＋可愛い声で応援！
         if (seconds > 0 && seconds % 300 === 0) {
           const newMsg = get5MinMessage(seconds);
           updateMascot('running', newMsg);
