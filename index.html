@@ -21,7 +21,22 @@
     .field-group { margin-bottom: 12px; }
 
     .btn-file { background: #3b82f6; color: #fff; border: none; padding: 12px; font-weight: bold; border-radius: 8px; width: 100%; font-size: 15px; margin-bottom: 12px; cursor: pointer; }
-    .timer-display { font-size: 48px; font-weight: bold; text-align: center; margin: 10px 0; font-family: monospace; color: #111827; }
+    
+    /* 応援キャラクターエリアのスタイル */
+    .mascot-box { text-align: center; padding: 10px 0 5px 0; background: #e0f2fe; border-radius: 10px; margin-bottom: 10px; min-height: 50px; border: 1px solid #bae6fd; }
+    .mascot-icon { font-size: 32px; display: inline-block; }
+    .mascot-text { font-size: 14px; font-weight: bold; color: #0369a1; margin-left: 6px; }
+
+    /* キャラクターのぽよぽよアニメーション */
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
+    }
+    .mascot-animating {
+      animation: bounce 0.8s infinite ease-in-out;
+    }
+
+    .timer-display { font-size: 48px; font-weight: bold; text-align: center; margin: 5px 0 10px 0; font-family: monospace; color: #111827; }
     
     .timer-btns-main { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 10px; }
     .timer-btns-sub { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
@@ -43,7 +58,6 @@
     
     .btn-copy { background: #dbeafe; color: #1e40af; border: 1px solid #bfdbfe; padding: 6px 8px; font-size: 12px; border-radius: 4px; cursor: pointer; font-weight: bold; }
 
-    /* 開閉（アコーディオン）用スタイル */
     details.edit-section { margin-top: 16px; border: 1px solid #e2e8f0; border-radius: 8px; background-color: #fafafa; overflow: hidden; }
     details.edit-section summary { font-size: 14px; font-weight: bold; color: #334155; padding: 12px; cursor: pointer; user-select: none; list-style: none; display: flex; align-items: center; justify-content: space-between; }
     details.edit-section summary::-webkit-details-marker { display: none; }
@@ -137,7 +151,6 @@
       <input type="number" id="custom-count" placeholder="個数を入力" style="display:none; margin-top:6px;" min="1" value="1">
     </div>
 
-    <!-- 折りたたみ式（details/summary）の作業項目管理エリア -->
     <details class="edit-section">
       <summary>⚙ 作業項目の追加・編集</summary>
       <div class="edit-content">
@@ -146,15 +159,19 @@
           <button class="btn-add-action" onclick="addItemInline()">追加</button>
         </div>
 
-        <div id="item-manage-list" class="item-manage-list">
-          <!-- 選択中工程の項目一覧が動的にここに生成されます -->
-        </div>
+        <div id="item-manage-list" class="item-manage-list"></div>
       </div>
     </details>
   </div>
 
   <!-- タイマーカード -->
   <div class="card">
+    <!-- 応援キャラクター表示欄 -->
+    <div class="mascot-box">
+      <span class="mascot-icon" id="mascot-icon">🐟</span>
+      <span class="mascot-text" id="mascot-text">準備OK！スタートを押してね！</span>
+    </div>
+
     <div class="timer-display" id="timer">00:00:00</div>
     <div class="timer-btns-main">
       <button class="btn-start" id="start-btn" onclick="startTimer()">スタート</button>
@@ -210,6 +227,56 @@
     let currentProcess = '';
     let currentJobNo = '';
 
+    // 魚たちの初期メッセージ設定
+    const mascotConfig = {
+      '冷凍機': { icon: '🐟', text: '作業スタート！スイスイ進めていこう！' },
+      '加工': { icon: '🐠', text: '作業スタート！集中していこう！' },
+      '組み立て': { icon: '🐡', text: '作業スタート！ファイト！' },
+      '検査': { icon: '🦭', text: '作業スタート！チェックがんばろう！' },
+      '整備': { icon: '🐬', text: '作業スタート！ファイト！' },
+      'default': { icon: '🐟', text: '作業スタート！がんばって！' }
+    };
+
+    // 5分（300秒）ごとの可愛い魚たちの応援メッセージ
+    const intervalMessages = {
+      '冷凍機': [
+        '5分経過！スイスイ順調だよ！',
+        '10分突破！いいペース！ナイスファイト！',
+        '15分経過！すごく集中できてるね！',
+        '20分突破！素晴らしい成果！そのままいこう！'
+      ],
+      '加工': [
+        '5分経過！一歩ずつ着実に！素晴らしい！',
+        '10分突破！いい集中力！その調子！',
+        '15分経過！職人技が光ってるね！',
+        '20分突破！手際がとっても素晴らしい！'
+      ],
+      '組み立て': [
+        '5分経過！いい流れ！マイペースでいこう！',
+        '10分突破！着実に形になっててすごい！',
+        '15分経過！ナイスファイト！順調そのもの！',
+        '20分突破！すばらしい集中力！'
+      ],
+      '検査': [
+        '5分経過！丁寧な作業、流石です！',
+        '10分突破！素晴らしい集中力！',
+        '15分経過！確実な手仕事、応援してるよ！',
+        '20分突破！あと一息、ファイト！'
+      ],
+      '整備': [
+        '5分経過！順調順調！その調子！',
+        '10分突破！手際がとっても素晴らしい！',
+        '15分経過！最高の仕上げに向かってるね！',
+        '20分突破！ファイト！ファイト！'
+      ],
+      'default': [
+        '5分経過！いい調子だね！',
+        '10分経過！素晴らしい集中力！',
+        '15分経過！無理せずマイペースでね！',
+        '20分経過！お疲れ様、その調子で頑張ろう！'
+      ]
+    };
+
     const defaultDetailOptions = {
       '冷凍機': ['配管取り付け', '気密試験', '真空引き', '冷媒充填'],
       '加工': ['穴あけ', 'タップ立て', '曲げ加工', 'バリ取り'],
@@ -256,6 +323,41 @@
       selectBtn('process-group', element);
       currentProcess = processName;
       renderDetailSection();
+      if (!timerInterval) {
+        const icon = (mascotConfig[processName] || mascotConfig['default']).icon;
+        updateMascot('default', `「${processName}」が選択されました！`, icon);
+      }
+    }
+
+    function updateMascot(state, customText, customIcon) {
+      const iconEl = document.getElementById('mascot-icon');
+      const textEl = document.getElementById('mascot-text');
+
+      if (state === 'running') {
+        const config = mascotConfig[currentProcess] || mascotConfig['default'];
+        iconEl.textContent = config.icon;
+        textEl.textContent = customText || config.text;
+        iconEl.classList.add('mascot-animating');
+      } else if (state === 'stopped') {
+        iconEl.textContent = '🐟💤';
+        textEl.textContent = 'ぷくぷく…（一時休止中）';
+        iconEl.classList.remove('mascot-animating');
+      } else if (state === 'finished') {
+        iconEl.textContent = '🐋🎉';
+        textEl.textContent = 'お疲れ様！ナイス作業！';
+        iconEl.classList.remove('mascot-animating');
+      } else {
+        iconEl.textContent = customIcon || '🐟';
+        textEl.textContent = customText || '準備OK！スタートを押してね！';
+        iconEl.classList.remove('mascot-animating');
+      }
+    }
+
+    function get5MinMessage(currentSec) {
+      const minutes = Math.floor(currentSec / 60);
+      const msgList = intervalMessages[currentProcess] || intervalMessages['default'];
+      const index = Math.min(Math.floor(minutes / 5) - 1, msgList.length - 1);
+      return msgList[index] || `${minutes}分経過！その調子でファイト！`;
     }
 
     function renderDetailSection() {
@@ -448,21 +550,33 @@
       document.getElementById('finish-btn').style.background = '#3b82f6';
       document.getElementById('finish-btn').style.color = '#fff';
 
+      updateMascot('running');
+
       timerInterval = setInterval(() => {
         seconds++;
         document.getElementById('timer').textContent = formatTime(seconds);
+
+        // 5分（300秒）ごとに応援セリフを更新！
+        if (seconds > 0 && seconds % 300 === 0) {
+          const newMsg = get5MinMessage(seconds);
+          updateMascot('running', newMsg);
+        }
       }, 1000);
     }
 
     function stopTimer() {
+      if (!timerInterval) return;
       clearInterval(timerInterval);
       timerInterval = null;
+      updateMascot('stopped');
     }
 
     function finishTimer() {
       if (seconds === 0) return;
       if (!validateInputs()) return;
-      stopTimer();
+      
+      clearInterval(timerInterval);
+      timerInterval = null;
 
       const model = document.querySelector('#model-group .btn.active').textContent;
       const spec = document.querySelector('#spec-group .btn.active').textContent;
@@ -486,6 +600,8 @@
       saveHistoryData();
       updateHistoryTable();
       updateSummary();
+
+      updateMascot('finished');
 
       seconds = 0;
       document.getElementById('timer').textContent = '00:00:00';
@@ -551,13 +667,15 @@
 
     function resetAllData() {
       if (confirm('保存されている計測データと履歴をすべて消去しますか？（追加・編集した作業項目は残ります）')) {
-        stopTimer();
+        if (timerInterval) clearInterval(timerInterval);
+        timerInterval = null;
         seconds = 0;
         historyData = [];
         localStorage.removeItem('kousu_historyData');
         document.getElementById('timer').textContent = '00:00:00';
         updateHistoryTable();
         updateSummary();
+        updateMascot('default');
       }
     }
   </script>
