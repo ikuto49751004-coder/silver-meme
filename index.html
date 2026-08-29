@@ -73,7 +73,6 @@
     .btn-item-save { background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1; padding: 10px 12px; font-weight: bold; border-radius: 8px; font-size: 13px; cursor: pointer; }
     .btn-item-del { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; padding: 10px 12px; font-weight: bold; border-radius: 8px; font-size: 13px; cursor: pointer; }
 
-    /* 音声設定用スタイル */
     .voice-control-group { display: flex; flex-direction: column; gap: 10px; margin-top: 8px; }
     .slider-row { display: flex; align-items: center; justify-content: space-between; font-size: 13px; font-weight: bold; color: #475569; }
     .slider-row input[type="range"] { width: 60%; }
@@ -179,7 +178,7 @@
             <span>声の高さ: <span id="pitch-val">1.4</span></span>
             <input type="range" id="voice-pitch" min="0.8" max="2.0" step="0.1" value="1.4" oninput="updateVoiceSettings()">
           </div>
-          <button class="btn-test-voice" onclick="speakText('5分経過！その調子で頑張ろう！')">🔊 声をテスト再生する</button>
+          <button class="btn-test-voice" onclick="speakText('15分経過！その調子で頑張ろう！')">🔊 声をテスト再生する</button>
         </div>
       </div>
     </details>
@@ -316,18 +315,17 @@
         );
         if (femaleVoice) uttr.voice = femaleVoice;
 
-        // 設定スライダーの値を取り出して適用（デフォルトは ゆっくり:0.85, 可愛い高さ:1.4）
         const currentRate = parseFloat(document.getElementById('voice-rate').value) || 0.85;
         const currentPitch = parseFloat(document.getElementById('voice-pitch').value) || 1.4;
 
-        uttr.rate = currentRate;   // ★ ゆっくり聞き取りやすい速度
-        uttr.pitch = currentPitch; // ★ 可愛く聞き取りやすい高さ
+        uttr.rate = currentRate;
+        uttr.pitch = currentPitch;
 
         window.speechSynthesis.speak(uttr);
       }
     }
 
-    function cheer5Min(text) {
+    function cheerNotice(text) {
       playChime();
       setTimeout(() => {
         speakText(text);
@@ -343,42 +341,43 @@
       'default': { icon: '🐟', text: '作業スタート！がんばって！' }
     };
 
-    const intervalMessages = {
+    // ★ 15分ごとのメッセージ定義
+    const intervalMessages15 = {
       '冷凍機': [
-        '5分経過！スイスイ順調だよ！',
-        '10分突破！いいペース！ナイスファイト！',
-        '15分経過！すごく集中できてるね！',
-        '20分突破！素晴らしい成果！そのままいこう！'
+        '15分経過！スイスイすごく順調だよ！',
+        '30分突破！いいペース！ナイスファイト！',
+        '45分経過！素晴らしい集中力！そのままいこう！',
+        '1時間経過！大作戦進行中！適度に水分補給してね！'
       ],
       '加工': [
-        '5分経過！一歩ずつ着実に！素晴らしい！',
-        '10分突破！いい集中力！その調子！',
-        '15分経過！職人技が光ってるね！',
-        '20分突破！手際がとっても素晴らしい！'
+        '15分経過！職人技が光ってるね！すごく良いペース！',
+        '30分突破！手際がとっても素晴らしい！',
+        '45分経過！集中力バッチリ！順調そのもの！',
+        '1時間経過！本当にお疲れ様！すばらしい成果だよ！'
       ],
       '組み立て': [
-        '5分経過！いい流れ！マイペースでいこう！',
-        '10分突破！着実に形になっててすごい！',
-        '15分経過！ナイスファイト！順調そのもの！',
-        '20分突破！すばらしい集中力！'
+        '15分経過！ナイスファイト！着実に形になってるね！',
+        '30分突破！すごくいい流れ！その調子！',
+        '45分経過！すばらしい集中力！マイペースでいこう！',
+        '1時間経過！1時間達成！適度に肩の力を抜いてね！'
       ],
       '検査': [
-        '5分経過！丁寧な作業、流石です！',
-        '10分突破！素晴らしい集中力！',
-        '15分経過！確実な手仕事、応援してるよ！',
-        '20分突破！あと一息、ファイト！'
+        '15分経過！確実な手仕事、流石です！',
+        '30分突破！素晴らしい集中力！順調だよ！',
+        '45分経過！丁寧なチェック、ありがとう！あと少し！',
+        '1時間経過！長時間の集中、本当にお疲れ様！'
       ],
       '整備': [
-        '5分経過！順調順調！その調子！',
-        '10分突破！手際がとっても素晴らしい！',
         '15分経過！最高の仕上げに向かってるね！',
-        '20分突破！ファイト！ファイト！'
+        '30分突破！手際がとっても素晴らしい！',
+        '45分経過！順調順調！その調子でファイト！',
+        '1時間経過！がんばったね！しっかり休憩も挟んでね！'
       ],
       'default': [
-        '5分経過！いい調子だね！',
-        '10分経過！素晴らしい集中力！',
-        '15分経過！無理せずマイペースでね！',
-        '20分経過！お疲れ様、その調子で頑張ろう！'
+        '15分経過！すごくいい調子だよ！',
+        '30分経過！素晴らしい集中力！',
+        '45分経過！順調そのもの！ファイト！',
+        '1時間経過！お疲れ様！その調子で頑張ろう！'
       ]
     };
 
@@ -458,10 +457,11 @@
       }
     }
 
-    function get5MinMessage(currentSec) {
+    // ★ 15分（900秒）ごとのメッセージ取得関数
+    function get15MinMessage(currentSec) {
       const minutes = Math.floor(currentSec / 60);
-      const msgList = intervalMessages[currentProcess] || intervalMessages['default'];
-      const index = Math.min(Math.floor(minutes / 5) - 1, msgList.length - 1);
+      const msgList = intervalMessages15[currentProcess] || intervalMessages15['default'];
+      const index = Math.min(Math.floor(minutes / 15) - 1, msgList.length - 1);
       return msgList[index] || `${minutes}分経過！その調子でファイト！`;
     }
 
@@ -650,7 +650,7 @@
       if (timerInterval) return;
 
       const startMsg = (mascotConfig[currentProcess] || mascotConfig['default']).text;
-      cheer5Min(startMsg);
+      cheerNotice(startMsg);
 
       document.getElementById('start-btn').style.background = '#10b981';
       document.getElementById('stop-btn').style.background = '#ef4444';
@@ -664,10 +664,11 @@
         seconds++;
         document.getElementById('timer').textContent = formatTime(seconds);
 
-        if (seconds > 0 && seconds % 300 === 0) {
-          const newMsg = get5MinMessage(seconds);
+        // ★ 15分（900秒）ごとに応援メッセージを発話
+        if (seconds > 0 && seconds % 900 === 0) {
+          const newMsg = get15MinMessage(seconds);
           updateMascot('running', newMsg);
-          cheer5Min(newMsg);
+          cheerNotice(newMsg);
         }
       }, 1000);
     }
@@ -687,7 +688,7 @@
       clearInterval(timerInterval);
       timerInterval = null;
 
-      cheer5Min('お疲れ様でした！作業完了です！');
+      cheerNotice('お疲れ様でした！作業完了です！');
 
       const model = document.querySelector('#model-group .btn.active').textContent;
       const spec = document.querySelector('#spec-group .btn.active').textContent;
