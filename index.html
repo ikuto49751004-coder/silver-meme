@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>工数計測アプリ</title>
+  <style>
+    body { font-family: sans-serif; background: #f4f6f8; margin: 0; padding: 15px; color: #333; }
+    .card { background: #fff; border-radius: 10px; padding: 15px; margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+    h3 { margin-top: 0; font-size: 16px; color: #444; }
+    select, button { width: 100%; padding: 12px; font-size: 16px; border-radius: 8px; border: 1px solid #ccc; margin-top: 5px; box-sizing: border-box; }
+    .btn-group { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .btn { background: #fff; border: 1px solid #007bff; color: #007bff; font-weight: bold; padding: 12px 5px; text-align: center; cursor: pointer; }
+    .btn.active { background: #007bff; color: #fff; }
+    .timer-display { font-size: 40px; font-weight: bold; text-align: center; margin: 10px 0; font-family: monospace; }
+    .btn-start { background: #28a745; color: #fff; border: none; }
+    .btn-stop { background: #dc3545; color: #fff; border: none; }
+    .btn-reset { background: #6c757d; color: #fff; border: none; }
+  </style>
+</head>
+<body>
+
+  <!-- 0. 工程表読み込み ＆ 仕事番号選択 -->
+  <div class="card">
+    <h3>0. 仕事番号（製番）を選択</h3>
+    <input type="file" id="csv-input" accept=".csv" style="display:none;" onchange="importCSV(this)">
+    <button onclick="document.getElementById('csv-input').click()" style="background:#e9ecef; color:#333; margin-bottom:10px;">📂 工程表(CSV)を読み込む</button>
+    
+    <select id="job-select" onchange="autoSelectJob()">
+      <option value="">-- 先に工程表を読み込んでください --</option>
+    </select>
+  </div>
+
+  <!-- 1. 機種選択 -->
+  <div class="card">
+    <h3>1. 機種を選択</h3>
+    <div class="btn-group" id="model-group">
+      <button class="btn" onclick="selectBtn('model-group', this)">LU-114</button>
+      <button class="btn" onclick="selectBtn('model-group', this)">LHU-114</button>
+      <button class="btn" onclick="selectBtn('model-group', this)">LHL-114</button>
+    </div>
+  </div>
+
+  <!-- 2. 仕様区分選択 -->
+  <div class="card">
+    <h3>2. 仕様区分を選択</h3>
+    <div class="btn-group" id="spec-group">
+      <button class="btn" onclick="selectBtn('spec-group', this)">標準</button>
+      <button class="btn" onclick="selectBtn('spec-group', this)">オプション</button>
+      <button class="btn" onclick="selectBtn('spec-group', this)">付加仕様</button>
+    </div>
+  </div>
+
+  <!-- 3. 工程選択 -->
+  <div class="card">
+    <h3>3. 工程を選択</h3>
+    <div class="btn-group" id="process-group">
+      <button class="btn" onclick="selectBtn('process-group', this)">冷凍機</button>
+      <button class="btn" onclick="selectBtn('process-group', this)">組み立て</button>
+      <button class="btn" onclick="selectBtn('process-group', this)">整備</button>
+    </div>
+  </div>
+
+  <!-- 4. 計測タイマー -->
+  <div class="card">
+    <div class="timer-display" id="timer">00:00:00</div>
+    <div class="btn-group">
+      <button class="btn-start" onclick="startTimer()">スタート</button>
+      <button class="btn-stop" onclick="stopTimer()">一時停止</button>
+      <button class="btn-reset" onclick="resetTimer()">リセット</button>
+    </div>
+  </div>
+
+  <script>
+    let timerInterval = null;
+    let seconds = 0;
+    let scheduleData = [];
+
+    // ボタンの選択状態を切り替える
+    function selectBtn(groupId, element) {
+      const buttons = document.querySelectorAll(`#${groupId} .btn`);
+      buttons.forEach(btn => btn.classList.remove('active'));
+      element.classList.add('active');
+    }
+
+    // CSV読み込み処理
+    function importCSV(input) {
+      const file = input.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const lines = e.target.result.trim().split('\n');
+        scheduleData = [];
+        const select = document.getElementById('job-select');
+        select.innerHTML = '<option value="">-- 仕事番号を選択してください --</option>';
+
+        for (let i = 1; i < lines.length; i++) {
+          const [jobNo, model, spec, process] = lines[i].split(',').map(s => s.trim());
+          if (jobNo) {
+            scheduleData.push({ jobNo, model, spec, process });
+            const opt = document.createElement('option');
+            opt.value = i - 1;
+            opt.textContent = `${jobNo} (${model})`;
+            select.appendChild(opt);
+          }
+        }
+        alert('工程表を読み込みました！');
+      };
+      reader.readAsText(file);
+    }
+
+    // 仕事番号を選ぶと「機種・仕様・工程」が自動選択される
+    function autoSelectJob() {
+      const index = document.getElementById('job-select').value;
+      if (index === '') return;
+      const data = scheduleData[index];
+
+      autoClick('model-group', data.model);
+      autoClick('spec-group', data.spec);
+      autoClick('process-group', data.process);
+    }
+
+    function autoClick(groupId, text) {
+      if (!text) return;
+      const buttons = document.querySelectorAll(`#${groupId} .btn`);
+      buttons.forEach(btn => {
+        if (btn.textContent.trim() === text) {
+          btn.click();
+        }
+      });
+    }
+
+    // タイマー機能
+    function startTimer() {
+      if (timerInterval) return;
+      timerInterval = setInterval(() => {
+        seconds++;
+        const hrs = String(Math.floor(seconds / 3600)).padStart(2, '0');
+        const mins = String(Math.floor((seconds % 3600) / 60)).padStart(2, '0');
+        const secs = String(seconds % 60).padStart(2, '0');
+        document.getElementById('timer').textContent = `${hrs}:${mins}:${secs}`;
+      }, 1000);
+    }
+
+    function stopTimer() {
+      clearInterval(timerInterval);
+      timerInterval = null;
+    }
+
+    function resetTimer() {
+      stopTimer();
+      seconds = 0;
+      document.getElementById('timer').textContent = '00:00:00';
+    }
+  </script>
+</body>
+</html>
