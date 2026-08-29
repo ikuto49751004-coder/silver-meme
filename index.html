@@ -5,85 +5,230 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>工数計測アプリ</title>
   <style>
-    body { font-family: sans-serif; background: #f4f6f8; margin: 0; padding: 15px; color: #333; }
-    .card { background: #fff; border-radius: 10px; padding: 15px; margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-    h3 { margin-top: 0; font-size: 16px; color: #444; }
-    select, button { width: 100%; padding: 12px; font-size: 16px; border-radius: 8px; border: 1px solid #ccc; margin-top: 5px; box-sizing: border-box; }
-    .btn-group { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-    .btn { background: #fff; border: 1px solid #007bff; color: #007bff; font-weight: bold; padding: 12px 5px; text-align: center; cursor: pointer; }
-    .btn.active { background: #007bff; color: #fff; }
-    .timer-display { font-size: 40px; font-weight: bold; text-align: center; margin: 10px 0; font-family: monospace; }
-    .btn-start { background: #28a745; color: #fff; border: none; }
-    .btn-stop { background: #dc3545; color: #fff; border: none; }
-    .btn-reset { background: #6c757d; color: #fff; border: none; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f8f9fa; margin: 0; padding: 15px; color: #333; }
+    .card { background: #fff; border-radius: 12px; padding: 16px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
+    h3 { margin: 0 0 12px 0; font-size: 16px; color: #1a1a1a; font-weight: bold; }
+    
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    .grid-process { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    .grid-process .full-width { grid-column: span 2; }
+
+    .btn { background: #fff; border: 2px solid #3b82f6; color: #1d4ed8; font-weight: bold; padding: 12px 4px; border-radius: 8px; font-size: 15px; text-align: center; cursor: pointer; }
+    .btn.active { background: #2563eb; color: #fff; border-color: #2563eb; }
+    
+    select, input[type="number"], input[type="text"] { width: 100%; padding: 12px; font-size: 15px; border-radius: 8px; border: 1px solid #ced4da; background-color: #e9ecef; box-sizing: border-box; margin-top: 6px; font-weight: bold; }
+    label { font-size: 14px; font-weight: bold; color: #1d4ed8; }
+    .field-group { margin-bottom: 12px; }
+
+    .btn-file { background: #3b82f6; color: #fff; border: none; padding: 12px; font-weight: bold; border-radius: 8px; width: 100%; font-size: 15px; margin-bottom: 12px; cursor: pointer; }
+    .timer-display { font-size: 48px; font-weight: bold; text-align: center; margin: 10px 0; font-family: monospace; color: #111827; }
+    
+    .timer-btns-main { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 10px; }
+    .timer-btns-sub { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    
+    .btn-start { background: #10b981; color: #fff; border: none; padding: 14px; font-weight: bold; border-radius: 8px; font-size: 15px; cursor: pointer; }
+    .btn-stop { background: #cbd5e1; color: #475569; border: none; padding: 14px; font-weight: bold; border-radius: 8px; font-size: 15px; cursor: pointer; }
+    .btn-finish { background: #cbd5e1; color: #475569; border: none; padding: 14px; font-weight: bold; border-radius: 8px; font-size: 15px; cursor: pointer; }
+    .btn-save { background: #3b82f6; color: #fff; border: none; padding: 12px; font-weight: bold; border-radius: 8px; font-size: 15px; cursor: pointer; }
+    .btn-reset-all { background: #64748b; color: #fff; border: none; padding: 12px; font-weight: bold; border-radius: 8px; font-size: 15px; cursor: pointer; }
+
+    /* 合計時間カード */
+    .summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; text-align: center; margin-bottom: 15px; }
+    .summary-box { background: #e0f2fe; border-radius: 8px; padding: 10px 4px; border: 1px solid #bae6fd; }
+    .summary-title { font-size: 12px; color: #0369a1; font-weight: bold; }
+    .summary-time { font-size: 14px; color: #0c4a6e; font-weight: bold; font-family: monospace; margin-top: 4px; }
+
+    /* 履歴テーブル */
+    table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 8px; }
+    th { background: #f1f5f9; padding: 8px; border: 1px solid #e2e8f0; color: #334155; }
+    td { padding: 8px; border: 1px solid #e2e8f0; text-align: center; }
+    .btn-add-item { background: #e2e8f0; color: #1e293b; border: none; padding: 6px 10px; font-size: 12px; border-radius: 6px; cursor: pointer; margin-top: 4px; font-weight: bold; }
   </style>
 </head>
 <body>
 
-  <!-- 0. 工程表読み込み ＆ 仕事番号選択 -->
+  <!-- 0. 仕事番号選択 -->
   <div class="card">
     <h3>0. 仕事番号（製番）を選択</h3>
     <input type="file" id="csv-input" accept=".csv" style="display:none;" onchange="importCSV(this)">
-    <button onclick="document.getElementById('csv-input').click()" style="background:#e9ecef; color:#333; margin-bottom:10px;">📂 工程表(CSV)を読み込む</button>
-    
+    <button class="btn-file" onclick="document.getElementById('csv-input').click()">📁 工程表(CSV)を自動読み込み</button>
     <select id="job-select" onchange="autoSelectJob()">
       <option value="">-- 先に工程表を読み込んでください --</option>
     </select>
   </div>
 
-  <!-- 1. 機種選択 -->
+  <!-- 1. 機種を選択 -->
   <div class="card">
     <h3>1. 機種を選択</h3>
-    <div class="btn-group" id="model-group">
+    <div class="grid-3" id="model-group">
       <button class="btn" onclick="selectBtn('model-group', this)">LU-114</button>
       <button class="btn" onclick="selectBtn('model-group', this)">LHU-114</button>
       <button class="btn" onclick="selectBtn('model-group', this)">LHL-114</button>
+      <button class="btn" onclick="selectBtn('model-group', this)">LH-114</button>
+      <button class="btn" onclick="selectBtn('model-group', this)">LHU-124</button>
+      <button class="btn" onclick="selectBtn('model-group', this)">LU-124</button>
     </div>
   </div>
 
-  <!-- 2. 仕様区分選択 -->
+  <!-- 2. 仕様区分を選択 -->
   <div class="card">
     <h3>2. 仕様区分を選択</h3>
-    <div class="btn-group" id="spec-group">
+    <div class="grid-3" id="spec-group">
       <button class="btn" onclick="selectBtn('spec-group', this)">標準</button>
       <button class="btn" onclick="selectBtn('spec-group', this)">オプション</button>
       <button class="btn" onclick="selectBtn('spec-group', this)">付加仕様</button>
     </div>
   </div>
 
-  <!-- 3. 工程選択 -->
+  <!-- 3. 工程を選択 -->
   <div class="card">
     <h3>3. 工程を選択</h3>
-    <div class="btn-group" id="process-group">
-      <button class="btn" onclick="selectBtn('process-group', this)">冷凍機</button>
-      <button class="btn" onclick="selectBtn('process-group', this)">組み立て</button>
-      <button class="btn" onclick="selectBtn('process-group', this)">整備</button>
+    <div class="grid-process" id="process-group">
+      <button class="btn" onclick="selectProcess(this, '冷凍機')">冷凍機</button>
+      <button class="btn" onclick="selectProcess(this, '加工')">加工</button>
+      <button class="btn" onclick="selectProcess(this, '組み立て')">組み立て</button>
+      <button class="btn" onclick="selectProcess(this, '検査')">検査</button>
+      <button class="btn full-width" onclick="selectProcess(this, '整備')">整備</button>
     </div>
   </div>
 
-  <!-- 4. 計測タイマー -->
+  <!-- 4. 詳細項目・個数を設定 -->
+  <div class="card">
+    <h3>4. 詳細項目・個数を設定</h3>
+    <div class="field-group">
+      <label>作業項目:</label>
+      <select id="detail-item"></select>
+      <button class="btn-add-item" onclick="addNewItem()">➕ 作業項目を追加</button>
+    </div>
+    <div class="field-group">
+      <label>個数:</label>
+      <select id="item-count" onchange="toggleCustomCount(this)">
+        <option value="1">1個</option>
+        <option value="2">2個</option>
+        <option value="3">3個</option>
+        <option value="4">4個</option>
+        <option value="5">5個</option>
+        <option value="6">6個</option>
+        <option value="7">7個</option>
+        <option value="8">8個</option>
+        <option value="9">9個</option>
+        <option value="10">10個</option>
+        <option value="custom">直接入力...</option>
+      </select>
+      <input type="number" id="custom-count" placeholder="個数を入力" style="display:none;" min="1" value="1">
+    </div>
+  </div>
+
+  <!-- タイマーカード -->
   <div class="card">
     <div class="timer-display" id="timer">00:00:00</div>
-    <div class="btn-group">
-      <button class="btn-start" onclick="startTimer()">スタート</button>
-      <button class="btn-stop" onclick="stopTimer()">一時停止</button>
-      <button class="btn-reset" onclick="resetTimer()">リセット</button>
+    <div class="timer-btns-main">
+      <button class="btn-start" id="start-btn" onclick="startTimer()">スタート</button>
+      <button class="btn-stop" id="stop-btn" onclick="stopTimer()">一時停止</button>
+      <button class="btn-finish" id="finish-btn" onclick="finishTimer()">計測終了</button>
     </div>
+    <div class="timer-btns-sub">
+      <button class="btn-save" onclick="exportCSV()">📁 保存 (CSV)</button>
+      <button class="btn-reset-all" onclick="resetAllData()">🗑 全リセット</button>
+    </div>
+  </div>
+
+  <!-- 5. 合計時間 & 履歴カード -->
+  <div class="card">
+    <h3>⏱ 仕様区分ごとの合計時間</h3>
+    <div class="summary-grid">
+      <div class="summary-box">
+        <div class="summary-title">標準 合計</div>
+        <div class="summary-time" id="sum-standard">00:00:00</div>
+      </div>
+      <div class="summary-box">
+        <div class="summary-title">オプション 合計</div>
+        <div class="summary-time" id="sum-option">00:00:00</div>
+      </div>
+      <div class="summary-box">
+        <div class="summary-title">付加仕様 合計</div>
+        <div class="summary-time" id="sum-extra">00:00:00</div>
+      </div>
+    </div>
+
+    <h3>📊 計測結果履歴</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>機種</th>
+          <th>区分</th>
+          <th>工程</th>
+          <th>作業項目</th>
+          <th>時間</th>
+        </tr>
+      </thead>
+      <tbody id="history-list">
+        <tr><td colspan="5" style="color:#94a3b8;">計測データはまだありません</td></tr>
+      </tbody>
+    </table>
   </div>
 
   <script>
     let timerInterval = null;
     let seconds = 0;
     let scheduleData = [];
+    let historyData = [];
+    let currentProcess = '';
 
-    // ボタンの選択状態を切り替える
+    const detailOptions = {
+      '冷凍機': ['配管取り付け', '気密試験', '真空引き', '冷媒充填'],
+      '加工': ['穴あけ', 'タップ立て', '曲げ加工', 'バリ取り'],
+      '組み立て': ['本体組付け', 'パーツ固定', '配線処理'],
+      '検査': ['外観検査', '動作確認', '絶縁抵抗試験'],
+      '整備': ['清掃・拭き上げ', '梱包', '出荷準備']
+    };
+
     function selectBtn(groupId, element) {
-      const buttons = document.querySelectorAll(`#${groupId} .btn`);
-      buttons.forEach(btn => btn.classList.remove('active'));
+      document.querySelectorAll(`#${groupId} .btn`).forEach(btn => btn.classList.remove('active'));
       element.classList.add('active');
     }
 
-    // CSV読み込み処理
+    function selectProcess(element, processName) {
+      selectBtn('process-group', element);
+      currentProcess = processName;
+      updateDetailDropdown();
+    }
+
+    function updateDetailDropdown() {
+      const detailSelect = document.getElementById('detail-item');
+      detailSelect.innerHTML = '';
+      const items = detailOptions[currentProcess] || ['標準作業'];
+      items.forEach(item => {
+        const opt = document.createElement('option');
+        opt.value = item;
+        opt.textContent = item;
+        detailSelect.appendChild(opt);
+      });
+    }
+
+    function addNewItem() {
+      if (!currentProcess) {
+        alert('先に工程を選択してください！');
+        return;
+      }
+      const newItem = prompt('新しい作業項目名を入力してください:');
+      if (newItem && newItem.trim() !== '') {
+        if (!detailOptions[currentProcess]) detailOptions[currentProcess] = [];
+        detailOptions[currentProcess].push(newItem.trim());
+        updateDetailDropdown();
+        document.getElementById('detail-item').value = newItem.trim();
+      }
+    }
+
+    function toggleCustomCount(select) {
+      const customInput = document.getElementById('custom-count');
+      if (select.value === 'custom') {
+        customInput.style.display = 'block';
+      } else {
+        customInput.style.display = 'none';
+      }
+    }
+
     function importCSV(input) {
       const file = input.files[0];
       if (!file) return;
@@ -109,36 +254,41 @@
       reader.readAsText(file);
     }
 
-    // 仕事番号を選ぶと「機種・仕様・工程」が自動選択される
     function autoSelectJob() {
       const index = document.getElementById('job-select').value;
       if (index === '') return;
       const data = scheduleData[index];
-
       autoClick('model-group', data.model);
       autoClick('spec-group', data.spec);
-      autoClick('process-group', data.process);
-    }
-
-    function autoClick(groupId, text) {
-      if (!text) return;
-      const buttons = document.querySelectorAll(`#${groupId} .btn`);
-      buttons.forEach(btn => {
-        if (btn.textContent.trim() === text) {
-          btn.click();
-        }
+      document.querySelectorAll('#process-group .btn').forEach(btn => {
+        if (btn.textContent.trim() === data.process) btn.click();
       });
     }
 
-    // タイマー機能
+    function autoClick(groupId, text) {
+      document.querySelectorAll(`#${groupId} .btn`).forEach(btn => {
+        if (btn.textContent.trim() === text) btn.click();
+      });
+    }
+
+    function formatTime(s) {
+      const hrs = String(Math.floor(s / 3600)).padStart(2, '0');
+      const mins = String(Math.floor((s % 3600) / 60)).padStart(2, '0');
+      const secs = String(s % 60).padStart(2, '0');
+      return `${hrs}:${mins}:${secs}`;
+    }
+
     function startTimer() {
       if (timerInterval) return;
+      document.getElementById('start-btn').style.background = '#10b981';
+      document.getElementById('stop-btn').style.background = '#ef4444';
+      document.getElementById('stop-btn').style.color = '#fff';
+      document.getElementById('finish-btn').style.background = '#3b82f6';
+      document.getElementById('finish-btn').style.color = '#fff';
+
       timerInterval = setInterval(() => {
         seconds++;
-        const hrs = String(Math.floor(seconds / 3600)).padStart(2, '0');
-        const mins = String(Math.floor((seconds % 3600) / 60)).padStart(2, '0');
-        const secs = String(seconds % 60).padStart(2, '0');
-        document.getElementById('timer').textContent = `${hrs}:${mins}:${secs}`;
+        document.getElementById('timer').textContent = formatTime(seconds);
       }, 1000);
     }
 
@@ -147,10 +297,78 @@
       timerInterval = null;
     }
 
-    function resetTimer() {
+    function finishTimer() {
+      if (seconds === 0) return;
       stopTimer();
+
+      const model = document.querySelector('#model-group .btn.active')?.textContent || '未選択';
+      const spec = document.querySelector('#spec-group .btn.active')?.textContent || '未選択';
+      const process = document.querySelector('#process-group .btn.active')?.textContent || '未選択';
+      const item = document.getElementById('detail-item').value || '未選択';
+      
+      let countSelect = document.getElementById('item-count').value;
+      let count = countSelect === 'custom' ? document.getElementById('custom-count').value : countSelect;
+
+      historyData.push({ model, spec, process, item, count, timeSec: seconds, timeStr: formatTime(seconds) });
+      
+      updateHistoryTable();
+      updateSummary();
+
       seconds = 0;
       document.getElementById('timer').textContent = '00:00:00';
+    }
+
+    function updateHistoryTable() {
+      const tbody = document.getElementById('history-list');
+      tbody.innerHTML = '';
+      if (historyData.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="color:#94a3b8;">計測データはまだありません</td></tr>';
+        return;
+      }
+      historyData.forEach(row => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${row.model}</td><td>${row.spec}</td><td>${row.process}</td><td>${row.item} (${row.count}個)</td><td>${row.timeStr}</td>`;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function updateSummary() {
+      let sums = { '標準': 0, 'オプション': 0, '付加仕様': 0 };
+      historyData.forEach(row => {
+        if (sums[row.spec] !== undefined) {
+          sums[row.spec] += row.timeSec;
+        }
+      });
+      document.getElementById('sum-standard').textContent = formatTime(sums['標準']);
+      document.getElementById('sum-option').textContent = formatTime(sums['オプション']);
+      document.getElementById('sum-extra').textContent = formatTime(sums['付加仕様']);
+    }
+
+    function exportCSV() {
+      if (historyData.length === 0) {
+        alert('保存するデータがありません。');
+        return;
+      }
+      let csv = '機種,区分,工程,作業項目,個数,時間\n';
+      historyData.forEach(r => {
+        csv += `${r.model},${r.spec},${r.process},${r.item},${r.count},${r.timeStr}\n`;
+      });
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = `工数計測結果_${new Date().toISOString().slice(0,10)}.csv`;
+      link.click();
+    }
+
+    function resetAllData() {
+      if (confirm('計測データと履歴をすべてリセットしますか？')) {
+        stopTimer();
+        seconds = 0;
+        historyData = [];
+        document.getElementById('timer').textContent = '00:00:00';
+        updateHistoryTable();
+        updateSummary();
+      }
     }
   </script>
 </body>
