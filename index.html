@@ -6,6 +6,12 @@
   <title>工数計測アプリ</title>
   <style>
     body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f8f9fa; margin: 0; padding: 15px; color: #333; }
+    
+    /* ヘッダーエリア（タイトルと設定ボタン） */
+    .header-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .header-title { font-size: 18px; font-weight: bold; color: #1a1a1a; margin: 0; }
+    .btn-settings-icon { background: #f1f5f9; border: 1px solid #cbd5e1; font-size: 20px; padding: 6px 12px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 4px; font-weight: bold; color: #475569; }
+    
     .card { background: #fff; border-radius: 12px; padding: 16px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
     h3 { margin: 0 0 12px 0; font-size: 16px; color: #1a1a1a; font-weight: bold; }
     
@@ -74,13 +80,27 @@
     .btn-item-save { background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1; padding: 10px 12px; font-weight: bold; border-radius: 8px; font-size: 13px; cursor: pointer; }
     .btn-item-del { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; padding: 10px 12px; font-weight: bold; border-radius: 8px; font-size: 13px; cursor: pointer; }
 
-    .voice-control-group { display: flex; flex-direction: column; gap: 10px; margin-top: 8px; }
+    /* モーダルポップアップ設定 */
+    .modal-backdrop { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); z-index: 1000; justify-content: center; align-items: center; }
+    .modal-backdrop.open { display: flex; }
+    .modal-content { background: #fff; border-radius: 12px; padding: 20px; width: 90%; max-width: 400px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+    .modal-header h4 { margin: 0; font-size: 16px; color: #1e293b; }
+    .btn-modal-close { background: none; border: none; font-size: 20px; cursor: pointer; color: #64748b; }
+
+    .voice-control-group { display: flex; flex-direction: column; gap: 12px; margin-top: 8px; }
     .slider-row { display: flex; align-items: center; justify-content: space-between; font-size: 13px; font-weight: bold; color: #475569; }
-    .slider-row input[type="range"] { width: 60%; }
-    .btn-test-voice { background: #e0e7ff; color: #3730a3; border: 1px solid #c7d2fe; padding: 8px; border-radius: 6px; font-size: 13px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 5px; }
+    .slider-row input[type="range"] { width: 55%; }
+    .btn-test-voice { background: #e0e7ff; color: #3730a3; border: 1px solid #c7d2fe; padding: 10px; border-radius: 6px; font-size: 13px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 5px; }
   </style>
 </head>
 <body>
+
+  <!-- トップヘッダー（タイトル＆歯車設定ボタン） -->
+  <div class="header-bar">
+    <h2 class="header-title">工数計測アプリ</h2>
+    <button class="btn-settings-icon" onclick="openVoiceSettings()" title="音声設定">⚙️ 音声設定</button>
+  </div>
 
   <!-- 0. 仕事番号選択 -->
   <div class="card">
@@ -166,23 +186,6 @@
         <div id="item-manage-list" class="item-manage-list"></div>
       </div>
     </details>
-
-    <details class="edit-section">
-      <summary>🔊 応援音声の調整 (速さ・高さ)</summary>
-      <div class="edit-content">
-        <div class="voice-control-group">
-          <div class="slider-row">
-            <span>話す速さ: <span id="rate-val">0.85</span></span>
-            <input type="range" id="voice-rate" min="0.5" max="1.5" step="0.05" value="0.85" oninput="updateVoiceSettings()">
-          </div>
-          <div class="slider-row">
-            <span>声の高さ: <span id="pitch-val">1.4</span></span>
-            <input type="range" id="voice-pitch" min="0.8" max="2.0" step="0.1" value="1.4" oninput="updateVoiceSettings()">
-          </div>
-          <button class="btn-test-voice" onclick="speakText('15分経過！その調子で頑張ろう！')">🔊 声をテスト再生する</button>
-        </div>
-      </div>
-    </details>
   </div>
 
   <!-- タイマーカード -->
@@ -240,6 +243,27 @@
     </table>
   </div>
 
+  <!-- 音声設定用 モーダル画面 -->
+  <div class="modal-backdrop" id="voice-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4>🔊 応援音声の設定</h4>
+        <button class="btn-modal-close" onclick="closeVoiceSettings()">✖</button>
+      </div>
+      <div class="voice-control-group">
+        <div class="slider-row">
+          <span>話す速さ: <span id="rate-val">0.85</span></span>
+          <input type="range" id="voice-rate" min="0.5" max="1.5" step="0.05" value="0.85" oninput="updateVoiceSettings()">
+        </div>
+        <div class="slider-row">
+          <span>声の高さ: <span id="pitch-val">1.4</span></span>
+          <input type="range" id="voice-pitch" min="0.8" max="2.0" step="0.1" value="1.4" oninput="updateVoiceSettings()">
+        </div>
+        <button class="btn-test-voice" onclick="speakText('15分経過！その調子で頑張ろう！')">🔊 声をテスト再生する</button>
+      </div>
+    </div>
+  </div>
+
   <script>
     let timerInterval = null;
     let seconds = 0;
@@ -247,6 +271,15 @@
     let historyData = [];
     let currentProcess = '';
     let currentJobNo = '';
+
+    // --- 音声設定モーダル操作 ---
+    function openVoiceSettings() {
+      document.getElementById('voice-modal').classList.add('open');
+    }
+
+    function closeVoiceSettings() {
+      document.getElementById('voice-modal').classList.remove('open');
+    }
 
     // --- 効果音再生 (Web Audio API) ---
     let audioCtx = null;
