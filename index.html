@@ -3,843 +3,143 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>工数計測アプリ</title>
+  <title>準備完了チェック</title>
   <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f8f9fa; margin: 0; padding: 15px; color: #333; }
-    
-    /* ヘッダーエリア（タイトルと歯車マーク） */
-    .header-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-    .header-title { font-size: 18px; font-weight: bold; color: #1a1a1a; margin: 0; }
-    .btn-settings-icon { background: #f1f5f9; border: 1px solid #cbd5e1; font-size: 22px; padding: 4px 10px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #475569; }
-    .btn-settings-icon:hover { background: #e2e8f0; }
-    
-    .card { background: #fff; border-radius: 12px; padding: 16px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
-    h3 { margin: 0 0 12px 0; font-size: 16px; color: #1a1a1a; font-weight: bold; }
-    
-    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-    .grid-process { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
-    .grid-process .full-width { grid-column: span 2; }
-
-    .btn { background: #fff; border: 2px solid #3b82f6; color: #1d4ed8; font-weight: bold; padding: 12px 4px; border-radius: 8px; font-size: 15px; text-align: center; cursor: pointer; }
-    .btn.active { background: #2563eb; color: #fff; border-color: #2563eb; }
-    
-    select, input[type="number"], input[type="text"] { width: 100%; padding: 10px 12px; font-size: 15px; border-radius: 8px; border: 1px solid #ced4da; background-color: #f8f9fa; box-sizing: border-box; font-weight: bold; }
-    label { font-size: 14px; font-weight: bold; color: #1d4ed8; }
-    .field-group { margin-bottom: 12px; }
-
-    .btn-file { background: #3b82f6; color: #fff; border: none; padding: 12px; font-weight: bold; border-radius: 8px; width: 100%; font-size: 15px; margin-bottom: 12px; cursor: pointer; }
-    
-    .mascot-box { text-align: center; padding: 10px 0 5px 0; background: #e0f2fe; border-radius: 10px; margin-bottom: 10px; min-height: 50px; border: 1px solid #bae6fd; }
-    .mascot-icon { font-size: 32px; display: inline-block; }
-    .mascot-text { font-size: 14px; font-weight: bold; color: #0369a1; margin-left: 6px; }
-
-    @keyframes bounce {
-      0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-8px); }
-    }
-    .mascot-animating {
-      animation: bounce 0.8s infinite ease-in-out;
+    /* 全体・背景設定（さわやかな水色グラデーション） */
+    body {
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #e0f7fa 0%, #b2ebf2 100%);
+      font-family: sans-serif;
+      color: #1e293b;
+      display: flex;
+      justify-content: center;
+      align-items: center;
     }
 
-    .timer-display { font-size: 48px; font-weight: bold; text-align: center; margin: 5px 0 10px 0; font-family: monospace; color: #111827; }
-    
-    .timer-btns-main { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 10px; }
-    .timer-btns-sub { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-    
-    .btn-start { background: #10b981; color: #fff; border: none; padding: 14px; font-weight: bold; border-radius: 8px; font-size: 15px; cursor: pointer; }
-    .btn-stop { background: #cbd5e1; color: #475569; border: none; padding: 14px; font-weight: bold; border-radius: 8px; font-size: 15px; cursor: pointer; }
-    .btn-finish { background: #cbd5e1; color: #475569; border: none; padding: 14px; font-weight: bold; border-radius: 8px; font-size: 15px; cursor: pointer; }
-    .btn-save { background: #3b82f6; color: #fff; border: none; padding: 12px 4px; font-weight: bold; border-radius: 8px; font-size: 13px; cursor: pointer; }
-    .btn-copy-all { background: #059669; color: #fff; border: none; padding: 12px 4px; font-weight: bold; border-radius: 8px; font-size: 13px; cursor: pointer; }
-    .btn-reset-all { background: #64748b; color: #fff; border: none; padding: 12px 4px; font-weight: bold; border-radius: 8px; font-size: 13px; cursor: pointer; }
+    /* メインの白いカード（見やすさアップ） */
+    .card {
+      background-color: #ffffff;
+      padding: 2rem;
+      border-radius: 16px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+      width: 90%;
+      max-width: 400px;
+      text-align: center;
+    }
 
-    .summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; text-align: center; margin-bottom: 15px; }
-    .summary-box { background: #e0f2fe; border-radius: 8px; padding: 10px 4px; border: 1px solid #bae6fd; }
-    .summary-title { font-size: 12px; color: #0369a1; font-weight: bold; }
-    .summary-time { font-size: 14px; color: #0c4a6e; font-weight: bold; font-family: monospace; margin-top: 4px; }
+    h2 {
+      margin-top: 0;
+      color: #0284c7;
+    }
 
-    table { width: 100%; border-collapse: collapse; font-size: 11px; margin-top: 8px; }
-    th { background: #f1f5f9; padding: 6px 4px; border: 1px solid #e2e8f0; color: #334155; }
-    td { padding: 6px 4px; border: 1px solid #e2e8f0; text-align: center; }
-    
-    .btn-copy { background: #dbeafe; color: #1e40af; border: 1px solid #bfdbfe; padding: 6px 8px; font-size: 12px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+    /* チェックボックスリスト */
+    .checklist {
+      text-align: left;
+      margin: 1.5rem 0;
+    }
 
-    details.edit-section { margin-top: 16px; border: 1px solid #e2e8f0; border-radius: 8px; background-color: #fafafa; overflow: hidden; }
-    details.edit-section summary { font-size: 14px; font-weight: bold; color: #334155; padding: 12px; cursor: pointer; user-select: none; list-style: none; display: flex; align-items: center; justify-content: space-between; }
-    details.edit-section summary::-webkit-details-marker { display: none; }
-    details.edit-section summary::after { content: "▶"; font-size: 12px; color: #64748b; transition: transform 0.2s; }
-    details.edit-section[open] summary::after { transform: rotate(90deg); }
-    
-    .edit-content { padding: 0 12px 12px 12px; }
-    .add-row { display: flex; gap: 8px; margin-bottom: 12px; }
-    .add-row input { flex: 1; background-color: #fff; border: 1px solid #cbd5e1; }
-    .btn-add-action { background: #3b82f6; color: #fff; border: none; padding: 0 16px; font-weight: bold; border-radius: 8px; font-size: 14px; cursor: pointer; white-space: nowrap; }
+    .check-item {
+      display: flex;
+      align-items: center;
+      margin-bottom: 1rem;
+      font-size: 1rem;
+      cursor: pointer;
+    }
 
-    .item-manage-list { display: flex; flex-direction: column; gap: 8px; }
-    .item-manage-row { display: flex; gap: 8px; align-items: center; }
-    .item-manage-row input { flex: 1; background-color: #fff; border: 1px solid #cbd5e1; }
-    .btn-item-save { background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1; padding: 10px 12px; font-weight: bold; border-radius: 8px; font-size: 13px; cursor: pointer; }
-    .btn-item-del { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; padding: 10px 12px; font-weight: bold; border-radius: 8px; font-size: 13px; cursor: pointer; }
+    .check-item input {
+      width: 20px;
+      height: 20px;
+      margin-right: 12px;
+      cursor: pointer;
+    }
 
-    /* モーダルポップアップ設定 */
-    .modal-backdrop { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); z-index: 1000; justify-content: center; align-items: center; }
-    .modal-backdrop.open { display: flex; }
-    .modal-content { background: #fff; border-radius: 12px; padding: 20px; width: 90%; max-width: 400px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
-    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-    .modal-header h4 { margin: 0; font-size: 16px; color: #1e293b; }
-    .btn-modal-close { background: none; border: none; font-size: 20px; cursor: pointer; color: #64748b; }
+    /* アニメーション用設定 */
+    .hidden {
+      display: none;
+      opacity: 0;
+      transform: translateY(10px);
+    }
 
-    .voice-control-group { display: flex; flex-direction: column; gap: 12px; margin-top: 8px; }
-    .slider-row { display: flex; align-items: center; justify-content: space-between; font-size: 13px; font-weight: bold; color: #475569; }
-    .slider-row input[type="range"] { width: 55%; }
-    .btn-test-voice { background: #e0e7ff; color: #3730a3; border: 1px solid #c7d2fe; padding: 10px; border-radius: 6px; font-size: 13px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 5px; }
+    .visible {
+      display: inline-block;
+      opacity: 1;
+      transform: translateY(0);
+      transition: all 0.4s ease-out;
+    }
+
+    /* スタートボタン（水色に映えるオレンジ） */
+    .start-btn {
+      background-color: #f97316;
+      color: #ffffff;
+      font-size: 1.25rem;
+      font-weight: bold;
+      border: none;
+      padding: 12px 32px;
+      border-radius: 50px;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(249, 115, 22, 0.4);
+      margin-top: 1rem;
+    }
+
+    .start-btn:hover {
+      background-color: #ea580c;
+      transform: scale(1.05);
+    }
   </style>
 </head>
 <body>
 
-  <!-- トップヘッダー（タイトル＆歯車マーク） -->
-  <div class="header-bar">
-    <h2 class="header-title">工数計測アプリ</h2>
-    <button class="btn-settings-icon" onclick="openVoiceSettings()" title="音声設定">⚙️</button>
-  </div>
-
-  <!-- 0. 仕事番号選択 -->
   <div class="card">
-    <h3>0. 仕事番号（製番）を選択</h3>
-    <input type="file" id="csv-input" accept=".csv" style="display:none;" onchange="importCSV(this)">
-    <button class="btn-file" onclick="document.getElementById('csv-input').click()">📁 工程表(CSV)を自動読み込み</button>
-    <select id="job-select" onchange="autoSelectJob()">
-      <option value="">-- 先に工程表を読み込んでください --</option>
-    </select>
-  </div>
+    <h2>準備を完了させてね！</h2>
 
-  <!-- 1. 機種を選択 -->
-  <div class="card">
-    <h3>1. 機種を選択 <span style="color:#ef4444;">*</span></h3>
-    <div class="grid-3" id="model-group">
-      <button class="btn" onclick="selectBtn('model-group', this)">LU-114</button>
-      <button class="btn" onclick="selectBtn('model-group', this)">LHU-114</button>
-      <button class="btn" onclick="selectBtn('model-group', this)">LHL-114</button>
-      <button class="btn" onclick="selectBtn('model-group', this)">LH-114</button>
-      <button class="btn" onclick="selectBtn('model-group', this)">LHU-124</button>
-      <button class="btn" onclick="selectBtn('model-group', this)">LU-124</button>
-    </div>
-  </div>
-
-  <!-- 2. 仕様区分を選択 -->
-  <div class="card">
-    <h3>2. 仕様区分を選択 <span style="color:#ef4444;">*</span></h3>
-    <div class="grid-3" id="spec-group">
-      <button class="btn" onclick="selectBtn('spec-group', this)">標準</button>
-      <button class="btn" onclick="selectBtn('spec-group', this)">オプション</button>
-      <button class="btn" onclick="selectBtn('spec-group', this)">付加仕様</button>
-    </div>
-  </div>
-
-  <!-- 3. 工程を選択 -->
-  <div class="card">
-    <h3>3. 工程を選択 <span style="color:#ef4444;">*</span></h3>
-    <div class="grid-process" id="process-group">
-      <button class="btn" onclick="selectProcess(this, '冷凍機')">冷凍機</button>
-      <button class="btn" onclick="selectProcess(this, '加工')">加工</button>
-      <button class="btn" onclick="selectProcess(this, '組み立て')">組み立て</button>
-      <button class="btn" onclick="selectProcess(this, '検査')">検査</button>
-      <button class="btn full-width" onclick="selectProcess(this, '整備')">整備</button>
-    </div>
-  </div>
-
-  <!-- 4. 詳細項目・個数を設定 -->
-  <div class="card">
-    <h3>4. 詳細項目・個数を設定</h3>
-    <div class="field-group">
-      <label>作業項目 <span style="color:#ef4444;">*</span>:</label>
-      <select id="detail-item" style="margin-top:6px;">
-        <option value="">-- 作業項目を選択 --</option>
-      </select>
+    <!-- 必須項目リスト -->
+    <div class="checklist">
+      <label class="check-item">
+        <input type="checkbox" class="required-check">
+        <span>必須項目 1 を確認した</span>
+      </label>
+      <label class="check-item">
+        <input type="checkbox" class="required-check">
+        <span>必須項目 2 を確認した</span>
+      </label>
+      <label class="check-item">
+        <input type="checkbox" class="required-check">
+        <span>必須項目 3 を確認した</span>
+      </label>
     </div>
 
-    <div class="field-group">
-      <label>個数 <span style="color:#ef4444;">*</span>:</label>
-      <select id="item-count" onchange="toggleCustomCount(this)" style="margin-top:6px;">
-        <option value="1">1個</option>
-        <option value="2">2個</option>
-        <option value="3">3個</option>
-        <option value="4">4個</option>
-        <option value="5">5個</option>
-        <option value="6">6個</option>
-        <option value="7">7個</option>
-        <option value="8">8個</option>
-        <option value="9">9個</option>
-        <option value="10">10個</option>
-        <option value="custom">直接入力...</option>
-      </select>
-      <input type="number" id="custom-count" placeholder="個数を入力" style="display:none; margin-top:6px;" min="1" value="1">
-    </div>
-
-    <details class="edit-section">
-      <summary>⚙ 作業項目の追加・編集</summary>
-      <div class="edit-content">
-        <div class="add-row">
-          <input type="text" id="new-item-input" placeholder="新しい項目名">
-          <button class="btn-add-action" onclick="addItemInline()">追加</button>
-        </div>
-
-        <div id="item-manage-list" class="item-manage-list"></div>
-      </div>
-    </details>
-  </div>
-
-  <!-- タイマーカード -->
-  <div class="card">
-    <div class="mascot-box">
-      <span class="mascot-icon" id="mascot-icon">🐟</span>
-      <span class="mascot-text" id="mascot-text">準備OK！スタートを押してね！</span>
-    </div>
-
-    <div class="timer-display" id="timer">00:00:00</div>
-    <div class="timer-btns-main">
-      <button class="btn-start" id="start-btn" onclick="startTimer()">スタート</button>
-      <button class="btn-stop" id="stop-btn" onclick="stopTimer()">一時停止</button>
-      <button class="btn-finish" id="finish-btn" onclick="finishTimer()">計測終了</button>
-    </div>
-    <div class="timer-btns-sub">
-      <button class="btn-save" onclick="exportCSV()">📁 保存 (CSV)</button>
-      <button class="btn-copy-all" onclick="copyAllDataToClipboard()">📋 全件コピー</button>
-      <button class="btn-reset-all" onclick="resetAllData()">🗑 全リセット</button>
-    </div>
-  </div>
-
-  <!-- 5. 合計時間 & 履歴カード -->
-  <div class="card">
-    <h3>⏱ 仕様区分ごとの合計時間</h3>
-    <div class="summary-grid">
-      <div class="summary-box">
-        <div class="summary-title">標準 合計</div>
-        <div class="summary-time" id="sum-standard">00:00:00</div>
-      </div>
-      <div class="summary-box">
-        <div class="summary-title">オプション 合計</div>
-        <div class="summary-time" id="sum-option">00:00:00</div>
-      </div>
-      <div class="summary-box">
-        <div class="summary-title">付加仕様 合計</div>
-        <div class="summary-time" id="sum-extra">00:00:00</div>
-      </div>
-    </div>
-
-    <h3>📊 計測結果履歴（保存済みデータ）</h3>
-    <table>
-      <thead>
-        <tr>
-          <th>仕事番号</th>
-          <th>機種/区分/工程</th>
-          <th>作業項目</th>
-          <th>時間</th>
-          <th>操作</th>
-        </tr>
-      </thead>
-      <tbody id="history-list">
-        <tr><td colspan="5" style="color:#94a3b8;">計測データはまだありません</td></tr>
-      </tbody>
-    </table>
-  </div>
-
-  <!-- 音声設定用 モーダル画面 -->
-  <div class="modal-backdrop" id="voice-modal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h4>🔊 応援音声の設定</h4>
-        <button class="btn-modal-close" onclick="closeVoiceSettings()">✖</button>
-      </div>
-      <div class="voice-control-group">
-        <div class="slider-row">
-          <span>話す速さ: <span id="rate-val">0.85</span></span>
-          <input type="range" id="voice-rate" min="0.5" max="1.5" step="0.05" value="0.85" oninput="updateVoiceSettings()">
-        </div>
-        <div class="slider-row">
-          <span>声の高さ: <span id="pitch-val">1.4</span></span>
-          <input type="range" id="voice-pitch" min="0.8" max="2.0" step="0.1" value="1.4" oninput="updateVoiceSettings()">
-        </div>
-        <button class="btn-test-voice" onclick="speakText('15分経過！その調子で頑張ろう！')">🔊 声をテスト再生する</button>
-      </div>
-    </div>
+    <!-- 条件クリアで現れるスタートボタン -->
+    <button id="startBtn" class="start-btn hidden" onclick="alert('スタートしました！')">
+      準備OK！スタート
+    </button>
   </div>
 
   <script>
-    let timerInterval = null;
-    let seconds = 0;
-    let scheduleData = [];
-    let historyData = [];
-    let currentProcess = '';
-    let currentJobNo = '';
+    // 必須のチェックボックスとスタートボタンを取得
+    const checkboxes = document.querySelectorAll('.required-check');
+    const startBtn = document.getElementById('startBtn');
 
-    // --- 音声設定モーダル操作 ---
-    function openVoiceSettings() {
-      document.getElementById('voice-modal').classList.add('open');
-    }
+    // チェック状態を判定する関数
+    function checkStatus() {
+      // すべてのチェックボックスが checked か判定
+      const allChecked = Array.from(checkboxes).every(cb => cb.checked);
 
-    function closeVoiceSettings() {
-      document.getElementById('voice-modal').classList.remove('open');
-    }
-
-    // --- 効果音再生 (Web Audio API) ---
-    let audioCtx = null;
-    function playChime() {
-      try {
-        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        if (audioCtx.state === 'suspended') audioCtx.resume();
-        
-        const osc1 = audioCtx.createOscillator();
-        const osc2 = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-
-        osc1.type = 'triangle';
-        osc2.type = 'triangle';
-        osc1.frequency.setValueAtTime(523.25, audioCtx.currentTime);
-        osc2.frequency.setValueAtTime(659.25, audioCtx.currentTime + 0.1);
-
-        gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.4);
-
-        osc1.connect(gain);
-        osc2.connect(gain);
-        gain.connect(audioCtx.destination);
-
-        osc1.start();
-        osc1.stop(audioCtx.currentTime + 0.1);
-        osc2.start(audioCtx.currentTime + 0.1);
-        osc2.stop(audioCtx.currentTime + 0.4);
-      } catch (e) {
-        console.log("Audio error:", e);
-      }
-    }
-
-    // --- 音声合成機能 ---
-    let availableVoices = [];
-
-    function loadVoices() {
-      if ('speechSynthesis' in window) {
-        availableVoices = window.speechSynthesis.getVoices();
-      }
-    }
-    if ('speechSynthesis' in window) {
-      window.speechSynthesis.onvoiceschanged = loadVoices;
-      loadVoices();
-    }
-
-    function updateVoiceSettings() {
-      const rate = document.getElementById('voice-rate').value;
-      const pitch = document.getElementById('voice-pitch').value;
-      document.getElementById('rate-val').textContent = rate;
-      document.getElementById('pitch-val').textContent = pitch;
-    }
-
-    function speakText(text) {
-      if ('speechSynthesis' in window) {
-        window.speechSynthesis.cancel();
-
-        const uttr = new SpeechSynthesisUtterance(text);
-        uttr.lang = 'ja-JP';
-
-        const femaleVoice = availableVoices.find(v => 
-          v.lang.includes('ja') && (
-            v.name.includes('Kyoko') || 
-            v.name.includes('Haruka') || 
-            v.name.includes('Sayaka') || 
-            v.name.includes('Otoya') === false
-          )
-        );
-        if (femaleVoice) uttr.voice = femaleVoice;
-
-        const currentRate = parseFloat(document.getElementById('voice-rate').value) || 0.85;
-        const currentPitch = parseFloat(document.getElementById('voice-pitch').value) || 1.4;
-
-        uttr.rate = currentRate;
-        uttr.pitch = currentPitch;
-
-        window.speechSynthesis.speak(uttr);
-      }
-    }
-
-    function cheerNotice(text) {
-      playChime();
-      setTimeout(() => {
-        speakText(text);
-      }, 400);
-    }
-
-    const mascotConfig = {
-      '冷凍機': { icon: '🐟', text: '作業スタート！スイスイ進めていこう！' },
-      '加工': { icon: '🐠', text: '作業スタート！集中していこう！' },
-      '組み立て': { icon: '🐡', text: '作業スタート！ファイト！' },
-      '検査': { icon: '🦭', text: '作業スタート！チェックがんばろう！' },
-      '整備': { icon: '🐬', text: '作業スタート！ファイト！' },
-      'default': { icon: '🐟', text: '作業スタート！がんばって！' }
-    };
-
-    const intervalMessages15 = {
-      '冷凍機': [
-        '15分経過！スイスイすごく順調だよ！',
-        '30分突破！いいペース！ナイスファイト！',
-        '45分経過！素晴らしい集中力！そのままいこう！',
-        '1時間経過！大作戦進行中！適度に水分補給してね！'
-      ],
-      '加工': [
-        '15分経過！職人技が光ってるね！すごく良いペース！',
-        '30分突破！手際がとっても素晴らしい！',
-        '45分経過！集中力バッチリ！順調そのもの！',
-        '1時間経過！本当にお疲れ様！すばらしい成果だよ！'
-      ],
-      '組み立て': [
-        '15分経過！ナイスファイト！着実に形になってるね！',
-        '30分突破！すごくいい流れ！その調子！',
-        '45分経過！すばらしい集中力！マイペースでいこう！',
-        '1時間経過！1時間達成！適度に肩の力を抜いてね！'
-      ],
-      '検査': [
-        '15分経過！確実な手仕事、流石です！',
-        '30分突破！素晴らしい集中力！順調だよ！',
-        '45分経過！丁寧なチェック、ありがとう！あと少し！',
-        '1時間経過！長時間の集中、本当にお疲れ様！'
-      ],
-      '整備': [
-        '15分経過！最高の仕上げに向かってるね！',
-        '30分突破！手際がとっても素晴らしい！',
-        '45分経過！順調順調！その調子でファイト！',
-        '1時間経過！がんばったね！しっかり休憩も挟んでね！'
-      ],
-      'default': [
-        '15分経過！すごくいい調子だよ！',
-        '30分経過！素晴らしい集中力！',
-        '45分経過！順調そのもの！ファイト！',
-        '1時間経過！お疲れ様！その調子で頑張ろう！'
-      ]
-    };
-
-    const defaultDetailOptions = {
-      '冷凍機': ['配管取り付け', '気密試験', '真空引き', '冷媒充填'],
-      '加工': ['穴あけ', 'タップ立て', '曲げ加工', 'バリ取り'],
-      '組み立て': ['パネル取付', 'パーツ固定', 'ネジ締め'],
-      '検査': ['外観検査', '動作確認', '絶縁抵抗試験'],
-      '整備': ['清掃・拭き上げ', '梱包', '出荷準備']
-    };
-
-    let detailOptions = JSON.parse(localStorage.getItem('kousu_detailOptions')) || defaultDetailOptions;
-
-    window.onload = function() {
-      const savedHistory = localStorage.getItem('kousu_historyData');
-      if (savedHistory) {
-        historyData = JSON.parse(savedHistory);
-        updateHistoryTable();
-        updateSummary();
-      }
-      
-      const savedSchedule = localStorage.getItem('kousu_scheduleData');
-      if (savedSchedule) {
-        scheduleData = JSON.parse(savedSchedule);
-        renderJobSelect();
-      }
-    };
-
-    function saveDetailOptions() {
-      localStorage.setItem('kousu_detailOptions', JSON.stringify(detailOptions));
-    }
-
-    function saveHistoryData() {
-      localStorage.setItem('kousu_historyData', JSON.stringify(historyData));
-    }
-
-    function saveScheduleData() {
-      localStorage.setItem('kousu_scheduleData', JSON.stringify(scheduleData));
-    }
-
-    function selectBtn(groupId, element) {
-      document.querySelectorAll(`#${groupId} .btn`).forEach(btn => btn.classList.remove('active'));
-      element.classList.add('active');
-    }
-
-    function selectProcess(element, processName) {
-      selectBtn('process-group', element);
-      currentProcess = processName;
-      renderDetailSection();
-      if (!timerInterval) {
-        const icon = (mascotConfig[processName] || mascotConfig['default']).icon;
-        updateMascot('default', `「${processName}」が選択されました！`, icon);
-      }
-    }
-
-    function updateMascot(state, customText, customIcon) {
-      const iconEl = document.getElementById('mascot-icon');
-      const textEl = document.getElementById('mascot-text');
-
-      if (state === 'running') {
-        const config = mascotConfig[currentProcess] || mascotConfig['default'];
-        iconEl.textContent = config.icon;
-        textEl.textContent = customText || config.text;
-        iconEl.classList.add('mascot-animating');
-      } else if (state === 'stopped') {
-        iconEl.textContent = '🐟💤';
-        textEl.textContent = 'ぷくぷく…（一時休止中）';
-        iconEl.classList.remove('mascot-animating');
-      } else if (state === 'finished') {
-        iconEl.textContent = '🐋🎉';
-        textEl.textContent = 'お疲れ様！ナイス作業！';
-        iconEl.classList.remove('mascot-animating');
+      if (allChecked) {
+        startBtn.classList.remove('hidden');
+        startBtn.classList.add('visible');
       } else {
-        iconEl.textContent = customIcon || '🐟';
-        textEl.textContent = customText || '準備OK！スタートを押してね！';
-        iconEl.classList.remove('mascot-animating');
+        startBtn.classList.remove('visible');
+        startBtn.classList.add('hidden');
       }
     }
 
-    function get15MinMessage(currentSec) {
-      const minutes = Math.floor(currentSec / 60);
-      const msgList = intervalMessages15[currentProcess] || intervalMessages15['default'];
-      const index = Math.min(Math.floor(minutes / 15) - 1, msgList.length - 1);
-      return msgList[index] || `${minutes}分経過！その調子でファイト！`;
-    }
-
-    function renderDetailSection() {
-      updateDetailDropdown();
-      renderManageList();
-    }
-
-    function updateDetailDropdown() {
-      const detailSelect = document.getElementById('detail-item');
-      detailSelect.innerHTML = '';
-      
-      if (!currentProcess) {
-        detailSelect.innerHTML = '<option value="">-- 先に工程を選択してください --</option>';
-        return;
-      }
-
-      const items = detailOptions[currentProcess] || [];
-      if (items.length === 0) {
-        detailSelect.innerHTML = '<option value="">-- 作業項目がありません --</option>';
-        return;
-      }
-
-      detailSelect.innerHTML = '<option value="">-- 作業項目を選択 --</option>';
-      items.forEach(item => {
-        const opt = document.createElement('option');
-        opt.value = item;
-        opt.textContent = item;
-        detailSelect.appendChild(opt);
-      });
-    }
-
-    function renderManageList() {
-      const container = document.getElementById('item-manage-list');
-      container.innerHTML = '';
-
-      if (!currentProcess) return;
-
-      const items = detailOptions[currentProcess] || [];
-      items.forEach((item, index) => {
-        const row = document.createElement('div');
-        row.className = 'item-manage-row';
-        row.innerHTML = `
-          <input type="text" id="edit-item-${index}" value="${item}">
-          <button class="btn-item-save" onclick="saveItemInline(${index})">保存</button>
-          <button class="btn-item-del" onclick="deleteItemInline(${index})">削除</button>
-        `;
-        container.appendChild(row);
-      });
-    }
-
-    function addItemInline() {
-      if (!currentProcess) {
-        alert('先に工程を選択してください！');
-        return;
-      }
-      const input = document.getElementById('new-item-input');
-      const val = input.value.trim();
-      if (!val) {
-        alert('新しい項目名を入力してください。');
-        return;
-      }
-
-      if (!detailOptions[currentProcess]) detailOptions[currentProcess] = [];
-      detailOptions[currentProcess].push(val);
-      saveDetailOptions();
-      
-      input.value = '';
-      renderDetailSection();
-      document.getElementById('detail-item').value = val;
-    }
-
-    function saveItemInline(index) {
-      const input = document.getElementById(`edit-item-${index}`);
-      const newVal = input.value.trim();
-      if (!newVal) {
-        alert('項目名を入力してください。');
-        return;
-      }
-
-      detailOptions[currentProcess][index] = newVal;
-      saveDetailOptions();
-      renderDetailSection();
-      alert('変更を保存しました！');
-    }
-
-    function deleteItemInline(index) {
-      const targetName = detailOptions[currentProcess][index];
-      if (confirm(`「${targetName}」を削除してもよろしいですか？`)) {
-        detailOptions[currentProcess].splice(index, 1);
-        saveDetailOptions();
-        renderDetailSection();
-      }
-    }
-
-    function toggleCustomCount(select) {
-      const customInput = document.getElementById('custom-count');
-      if (select.value === 'custom') {
-        customInput.style.display = 'block';
-      } else {
-        customInput.style.display = 'none';
-      }
-    }
-
-    function validateInputs() {
-      const model = document.querySelector('#model-group .btn.active');
-      const spec = document.querySelector('#spec-group .btn.active');
-      const process = document.querySelector('#process-group .btn.active');
-      const item = document.getElementById('detail-item').value;
-      
-      let countSelect = document.getElementById('item-count').value;
-      let customCount = document.getElementById('custom-count').value;
-      let countValid = countSelect === 'custom' ? (customCount && customCount > 0) : !!countSelect;
-
-      if (!model) { alert('【必須】機種を選択してください。'); return false; }
-      if (!spec) { alert('【必須】仕様区分を選択してください。'); return false; }
-      if (!process) { alert('【必須】工程を選択してください。'); return false; }
-      if (!item) { alert('【必須】作業項目を選択してください。'); return false; }
-      if (!countValid) { alert('【必須】個数を正しく入力してください。'); return false; }
-
-      return true;
-    }
-
-    function importCSV(input) {
-      const file = input.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        const lines = e.target.result.trim().split('\n');
-        scheduleData = [];
-
-        for (let i = 1; i < lines.length; i++) {
-          const [jobNo, model, spec, process] = lines[i].split(',').map(s => s.trim());
-          if (jobNo) {
-            scheduleData.push({ jobNo, model, spec, process });
-          }
-        }
-        saveScheduleData();
-        renderJobSelect();
-        alert('工程表を読み込み保存しました！');
-      };
-      reader.readAsText(file);
-    }
-
-    function renderJobSelect() {
-      const select = document.getElementById('job-select');
-      select.innerHTML = '<option value="">-- 仕事番号を選択してください --</option>';
-      scheduleData.forEach((data, index) => {
-        const opt = document.createElement('option');
-        opt.value = index;
-        opt.textContent = `${data.jobNo} (${data.model})`;
-        select.appendChild(opt);
-      });
-    }
-
-    function autoSelectJob() {
-      const index = document.getElementById('job-select').value;
-      if (index === '') {
-        currentJobNo = '';
-        return;
-      }
-      const data = scheduleData[index];
-      currentJobNo = data.jobNo;
-      autoClick('model-group', data.model);
-      autoClick('spec-group', data.spec);
-      document.querySelectorAll('#process-group .btn').forEach(btn => {
-        if (btn.textContent.trim() === data.process) btn.click();
-      });
-    }
-
-    function autoClick(groupId, text) {
-      document.querySelectorAll(`#${groupId} .btn`).forEach(btn => {
-        if (btn.textContent.trim() === text) btn.click();
-      });
-    }
-
-    function formatTime(s) {
-      const hrs = String(Math.floor(s / 3600)).padStart(2, '0');
-      const mins = String(Math.floor((s % 3600) / 60)).padStart(2, '0');
-      const secs = String(s % 60).padStart(2, '0');
-      return `${hrs}:${mins}:${secs}`;
-    }
-
-    function startTimer() {
-      if (!validateInputs()) return;
-      if (timerInterval) return;
-
-      const startMsg = (mascotConfig[currentProcess] || mascotConfig['default']).text;
-      cheerNotice(startMsg);
-
-      document.getElementById('start-btn').style.background = '#10b981';
-      document.getElementById('stop-btn').style.background = '#ef4444';
-      document.getElementById('stop-btn').style.color = '#fff';
-      document.getElementById('finish-btn').style.background = '#3b82f6';
-      document.getElementById('finish-btn').style.color = '#fff';
-
-      updateMascot('running');
-
-      timerInterval = setInterval(() => {
-        seconds++;
-        document.getElementById('timer').textContent = formatTime(seconds);
-
-        if (seconds > 0 && seconds % 900 === 0) {
-          const newMsg = get15MinMessage(seconds);
-          updateMascot('running', newMsg);
-          cheerNotice(newMsg);
-        }
-      }, 1000);
-    }
-
-    function stopTimer() {
-      if (!timerInterval) return;
-      clearInterval(timerInterval);
-      timerInterval = null;
-      speakText('一時停止しました');
-      updateMascot('stopped');
-    }
-
-    function finishTimer() {
-      if (seconds === 0) return;
-      if (!validateInputs()) return;
-      
-      clearInterval(timerInterval);
-      timerInterval = null;
-
-      cheerNotice('お疲れ様でした！作業完了です！');
-
-      const model = document.querySelector('#model-group .btn.active').textContent;
-      const spec = document.querySelector('#spec-group .btn.active').textContent;
-      const process = document.querySelector('#process-group .btn.active').textContent;
-      const item = document.getElementById('detail-item').value;
-      
-      let countSelect = document.getElementById('item-count').value;
-      let count = countSelect === 'custom' ? document.getElementById('custom-count').value : countSelect;
-
-      historyData.push({ 
-        jobNo: currentJobNo || '未設定', 
-        model, 
-        spec, 
-        process, 
-        item, 
-        count, 
-        timeSec: seconds, 
-        timeStr: formatTime(seconds) 
-      });
-      
-      saveHistoryData();
-      updateHistoryTable();
-      updateSummary();
-
-      updateMascot('finished');
-
-      seconds = 0;
-      document.getElementById('timer').textContent = '00:00:00';
-    }
-
-    function copyToClipboard(text) {
-      if (text === '未設定' || !text) {
-        alert('仕事番号が設定されていません。');
-        return;
-      }
-      navigator.clipboard.writeText(text).then(() => {
-        alert(`仕事番号 「${text}」 をコピーしました！\nManageクラウド画面で Ctrl+V で貼り付けできます。`);
-      });
-    }
-
-    function copyAllDataToClipboard() {
-      if (historyData.length === 0) {
-        alert('コピーするデータがありません。');
-        return;
-      }
-
-      let text = '仕事番号,機種,区分,工程,作業項目,個数,時間\n';
-      historyData.forEach(r => {
-        text += `${r.jobNo},${r.model},${r.spec},${r.process},${r.item},${r.count},${r.timeStr}\n`;
-      });
-
-      navigator.clipboard.writeText(text).then(() => {
-        alert('計測結果（全件）をコピーしました！\n他の画面で Ctrl+V でそのまま貼り付けできます。');
-      });
-    }
-
-    function updateHistoryTable() {
-      const tbody = document.getElementById('history-list');
-      tbody.innerHTML = '';
-      if (historyData.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" style="color:#94a3b8;">計測データはまだありません</td></tr>';
-        return;
-      }
-      historyData.forEach(row => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td style="font-weight:bold;">${row.jobNo}</td>
-          <td>${row.model} / ${row.spec} / ${row.process}</td>
-          <td>${row.item} (${row.count}個)</td>
-          <td>${row.timeStr}</td>
-          <td><button class="btn-copy" onclick="copyToClipboard('${row.jobNo}')">📋 番号コピー</button></td>
-        `;
-        tbody.appendChild(tr);
-      });
-    }
-
-    function updateSummary() {
-      let sums = { '標準': 0, 'オプション': 0, '付加仕様': 0 };
-      historyData.forEach(row => {
-        if (sums[row.spec] !== undefined) {
-          sums[row.spec] += row.timeSec;
-        }
-      });
-      document.getElementById('sum-standard').textContent = formatTime(sums['標準']);
-      document.getElementById('sum-option').textContent = formatTime(sums['オプション']);
-      document.getElementById('sum-extra').textContent = formatTime(sums['付加仕様']);
-    }
-
-    function exportCSV() {
-      if (historyData.length === 0) {
-        alert('保存するデータがありません。');
-        return;
-      }
-      
-      let csv = '仕事番号,機種,区分,工程,作業項目,個数,時間\n';
-      historyData.forEach(r => {
-        csv += `${r.jobNo},${r.model},${r.spec},${r.process},${r.item},${r.count},${r.timeStr}\n`;
-      });
-      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-      const link = document.createElement('a');
-      link.href = URL.createObjectURL(blob);
-      link.download = `工数計測結果_${new Date().toISOString().slice(0,10)}.csv`;
-      link.click();
-    }
-
-    function resetAllData() {
-      if (confirm('保存されている計測データと履歴をすべて消去しますか？（追加・編集した作業項目は残ります）')) {
-        if (timerInterval) clearInterval(timerInterval);
-        timerInterval = null;
-        seconds = 0;
-        historyData = [];
-        localStorage.removeItem('kousu_historyData');
-        document.getElementById('timer').textContent = '00:00:00';
-        updateHistoryTable();
-        updateSummary();
-        updateMascot('default');
-      }
-    }
+    // 全てのチェックボックスにイベントを設定
+    checkboxes.forEach(cb => {
+      cb.addEventListener('change', checkStatus);
+    });
   </script>
+
 </body>
 </html>
