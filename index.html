@@ -4,6 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>工数計測アプリ</title>
+  <!-- Excel(.xlsx)ファイルをそのまま読み込むための外部ライブラリ -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <style>
     /* 背景色を水色 (#e0f2fe) に変更 */
     body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #e0f2fe; margin: 0; padding: 15px; color: #333; }
@@ -107,10 +109,10 @@
   <!-- 0. 仕事番号選択 -->
   <div class="card">
     <h3>0. 仕事番号（製番）を選択</h3>
-    <input type="file" id="csv-input" accept=".csv" style="display:none;" onchange="importCSV(this)">
-    <button class="btn-file" onclick="document.getElementById('csv-input').click()">📁 工程表(CSV)を自動読み込み</button>
+    <input type="file" id="excel-input" accept=".xlsx, .xls, .csv" style="display:none;" onchange="importExcel(this)">
+    <button class="btn-file" onclick="document.getElementById('excel-input').click()">📁 工程表(Excel/CSV)を読み込み</button>
     <select id="job-select" onchange="autoSelectJob()">
-      <option value="">-- 先に工程表を読み込んでください --</option>
+      <option value="">-- 先に工程表ファイルを読み込んでください --</option>
     </select>
   </div>
 
@@ -471,7 +473,7 @@
 
     // 必須入力項目のリアルタイム監視とマスコット表示の自動更新
     function checkAllInputsAndMascot() {
-      if (timerInterval) return; // タイマー計測中は何もしない
+      if (timerInterval) return;
 
       const model = document.querySelector('#model-group .btn.active');
       const spec = document.querySelector('#spec-group .btn.active');
@@ -643,25 +645,72 @@
       return true;
     }
 
-    function importCSV(input) {
+    // --- Excel (.xlsx) / CSV 両対応の読み込み処理 ---
+    function importExcel(input) {
       const file = input.files[0];
       if (!file) return;
+
       const reader = new FileReader();
       reader.onload = function(e) {
-        const lines = e.target.result.trim().split('\n');
-        scheduleData = [];
+        try {
+          const data = new Uint8Array(e.target.result);
+          const workbook = XLSX.read(data, { type: 'array' });
+          const firstSheetName = workbook.SheetNames[0];
+          const worksheet = workbook.Sheets[firstSheetName];
+          const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
 
-        for (let i = 1; i < lines.length; i++) {
-          const [jobNo, model, spec, process] = lines[i].split(',').map(s => s.trim());
-          if (jobNo) {
-            scheduleData.push({ jobNo, model, spec, process });
+          scheduleData = [];
+
+          // 「仕事番号」というヘッダーが入っている列を自動検出
+          let jobColIndex = -1;
+          let noteColIndex = -1;
+          let startRow = -1;
+
+          for (let r = 0; r < jsonData.length; r++) {
+            const row = jsonData[r];
+            if (!row) continue;
+            for (let c = 0; c < row.length; c++) {
+              if (row[c] && String(row[c]).includes('仕事番号')) {
+                jobColIndex = c;
+                startRow = r + 1;
+              }
+              if (row[c] && String(row[c]).includes('標準')) {
+                noteColIndex = c;
+              }
+            }
+            if (jobColIndex !== -1) break;
           }
+
+          // 「仕事番号」という見出しがない場合は C列（インデックス2）を規定位置とする
+          if (jobColIndex === -1) jobColIndex = 2; // C列
+          if (noteColIndex === -1) noteColIndex = 7; // H列
+          if (startRow === -1) startRow = 3; // 4行目からデータ
+
+          for (let i = startRow; i < jsonData.length; i++) {
+            const row = jsonData[i];
+            if (!row) continue;
+            const jobNo = row[jobColIndex] ? String(row[jobColIndex]).trim() : '';
+            const note = row[noteColIndex] ? String(row[noteColIndex]).trim() : '';
+
+            if (jobNo && jobNo !== 'undefined' && jobNo !== '仕事番号') {
+              scheduleData.push({ jobNo, note });
+            }
+          }
+
+          if (scheduleData.length === 0) {
+            alert('仕事番号が見つかりませんでした。ファイル形式を確認してください。');
+            return;
+          }
+
+          saveScheduleData();
+          renderJobSelect();
+          alert(`${scheduleData.length} 件の仕事番号を読み込みました！`);
+        } catch (err) {
+          console.error(err);
+          alert('ファイルの読み込みに失敗しました。');
         }
-        saveScheduleData();
-        renderJobSelect();
-        alert('工程表を読み込み保存しました！');
       };
-      reader.readAsText(file);
+      reader.readAsArrayBuffer(file);
     }
 
     function renderJobSelect() {
@@ -670,7 +719,7 @@
       scheduleData.forEach((data, index) => {
         const opt = document.createElement('option');
         opt.value = index;
-        opt.textContent = `${data.jobNo} (${data.model})`;
+        opt.textContent = data.note ? `${data.jobNo} (${data.note})` : data.jobNo;
         select.appendChild(opt);
       });
     }
@@ -683,11 +732,7 @@
       }
       const data = scheduleData[index];
       currentJobNo = data.jobNo;
-      autoClick('model-group', data.model);
-      autoClick('spec-group', data.spec);
-      document.querySelectorAll('#process-group .btn').forEach(btn => {
-        if (btn.textContent.trim() === data.process) btn.click();
-      });
+      checkAllInputsAndMascot();
     }
 
     function autoClick(groupId, text) {
